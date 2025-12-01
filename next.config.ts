@@ -64,6 +64,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'fr.web.img6.acsta.net',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
