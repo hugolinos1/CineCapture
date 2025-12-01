@@ -49,14 +49,10 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   Vous devez obligatoirement trouver les informations suivantes sur le web et les retourner en français:
   
   1.  **Synopsis détaillé**: Développez le résumé fourni.
-  2.  **URL de l'affiche (posterUrl)**: C'est une étape cruciale. Trouvez une URL publique et valide pour une affiche de haute qualité. Pour cela, suivez cette procédure :
-      - Cherchez d'abord sur **www.impawards.com**.
-      - Si vous ne trouvez rien, cherchez sur **www.themoviedb.org (TMDb)**.
-      - En dernier recours, si le contenu est une série, essayez **www.thetvdb.com**.
-      - Assurez-vous que l'URL mène directement à une image (ex: .jpg, .png) et non à une page web.
-  3.  **Distribution (cast)**: Listez les acteurs principaux.
-  4.  **Genres**: Listez les genres associés.
-  5.  **Note (rating)**: Si disponible, fournissez la note (sur 10).
+  2.  **Distribution (cast)**: Listez les acteurs principaux.
+  3.  **Genres**: Listez les genres associés.
+  4.  **Note (rating)**: Si disponible, fournissez la note (sur 10).
+  5.  **URL de l'affiche (posterUrl)**: C'est l'étape la plus importante. Tu dois trouver une URL publique et valide pour une affiche de haute qualité. Pour cela, tu dois obligatoirement utiliser le site **www.themoviedb.org (TMDb)**. L'URL finale doit être une URL d'image directe (se terminant par .jpg ou .png), pas une page web.
 
   Informations de base:
   Titre: {{{title}}}
