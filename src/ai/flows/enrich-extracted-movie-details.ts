@@ -55,9 +55,9 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   ## SOURCE 1 (PRIORITAIRE): The Movie Database (TMDb)
   1. Cherchez sur www.themoviedb.org
   2. Identifiez le "poster_path" (ex: /8Y43POKJJhOi7eU5ieDUAeyD_H9.jpg)
-  3. Construisez l'URL: https://image.tmdb.org/t/p/original{poster_path}
-     ⚠️ Utilisez "original" pour la meilleure qualité, pas "w500"
-     Exemple: https://image.tmdb.org/t/p/original/8Y43POKJJhOi7eU5ieDUAeyD_H9.jpg
+  3. Construisez l'URL: https://image.tmdb.org/t/p/w780{poster_path}
+     ⚠️ Utilisez "w780" pour une bonne qualité et une haute disponibilité.
+     Exemple: https://image.tmdb.org/t/p/w780/8Y43POKJJhOi7eU5ieDUAeyD_H9.jpg
   
   ## SOURCE 2 (FALLBACK): IMDb
   Si TMDb échoue:
@@ -79,16 +79,16 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   RÈGLES CRITIQUES:
   - L'URL de l'affiche DOIT être une URL d'image directe (pas une page web)
   - L'URL DOIT être accessible publiquement (pas de liens authentifiés)
-  - Préférez toujours la plus haute résolution disponible
-  - Testez mentalement si l'URL est valide avant de la retourner
-  - Si AUCUNE affiche n'est trouvée après toutes les tentatives, retournez une chaîne vide ""
+  - Préférez toujours la plus haute résolution disponible et fiable ("w780" est un excellent choix).
+  - Testez mentalement si l'URL est valide avant de la retourner. Elle doit commencer par https:// et finir par une extension d'image.
+  - Si AUCUNE affiche n'est trouvée après toutes les tentatives, retournez une chaîne vide "" pour le posterUrl.
   
   INFORMATIONS COMPLÉMENTAIRES:
   - Synopsis détaillé en français
   - Distribution principale (5-10 acteurs principaux)
   - Genres (liste complète, en français)
   - Note (sur 10, convertissez si nécessaire)
-  - Indiquez dans le champ "source" quelle base de données a été utilisée
+  - Indiquez dans le champ "source" quelle base de données a été utilisée avec succès pour l'affiche.
   
   Retournez toutes les informations au format JSON.`,
 });
@@ -116,7 +116,7 @@ const enrichExtractedMovieDetailsFlow = ai.defineFlow(
     if (output?.posterUrl) {
       const isUrlValid = await verifyImageUrl(output.posterUrl);
       if (!isUrlValid) {
-        console.warn(`Invalid or inaccessible poster URL detected: ${output.posterUrl}`);
+        console.warn(`Invalid or inaccessible poster URL detected and discarded: ${output.posterUrl}`);
         output.posterUrl = ''; // Réinitialiser si l'URL n'est pas valide
       }
     }
