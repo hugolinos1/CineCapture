@@ -1,3 +1,4 @@
+
 import type { EnrichExtractedMovieDetailsOutput } from "@/ai/flows/enrich-extracted-movie-details";
 
 export type MediaStatus = 'watched' | 'in-progress' | 'unwatched';
@@ -5,7 +6,8 @@ export type MediaStatus = 'watched' | 'in-progress' | 'unwatched';
 export type MediaType = 'movie' | 'series' | 'miniseries';
 
 export interface MediaItem {
-  id: string;
+  id: string; // Firestore document ID
+  userId: string;
   title: string;
   type: MediaType;
   summary: string;
@@ -15,6 +17,7 @@ export interface MediaItem {
   status: MediaStatus;
   userNotes?: string;
   genres: string[];
+  addedAt: Date;
 }
 
 export type EnrichedMovieDetails = EnrichExtractedMovieDetailsOutput;

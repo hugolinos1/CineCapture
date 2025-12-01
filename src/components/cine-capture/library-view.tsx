@@ -1,10 +1,11 @@
+
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { Film, Trash2, PlusCircle } from 'lucide-react';
+import { Film, Trash2, PlusCircle, LogIn } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarProvider } from '../ui/sidebar';
@@ -21,64 +22,43 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-
-const LIBRARY_KEY = 'cine-capture-library';
+import { useAuth, useCollection, useFirestore, useUser } from '@/firebase';
+import { collection, writeBatch, getDocs, query } from 'firebase/firestore';
 
 export default function LibraryView() {
-  const [items, setItems] = useState<MediaItem[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
+  const { user, loading: userLoading } = useUser();
+  const { data: items, loading: itemsLoading } = useCollection<MediaItem>('library', user?.uid);
+  
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
+  
+  const firestore = useFirestore();
+  const router = useRouter();
   const { toast } = useToast();
 
-  const loadLibrary = useCallback(() => {
-    try {
-      const localData = localStorage.getItem(LIBRARY_KEY);
-      if (localData) {
-        setItems(JSON.parse(localData));
-      } else {
-        setItems([]);
-      }
-    } catch (error) {
-      console.error("Failed to load library from localStorage:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadLibrary();
-    setIsMounted(true);
-    
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === LIBRARY_KEY) {
-        loadLibrary();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [loadLibrary]);
-
   const filteredItems = useMemo(() => {
+    if (!items) return [];
     return items.filter(item => {
       const statusMatch = statusFilter === 'all' || item.status === statusFilter;
       const typeMatch = typeFilter === 'all' || item.type === typeFilter;
       return statusMatch && typeMatch;
-    }).sort((a, b) => {
-        const dateA = new Date(a.id).getTime();
-        const dateB = new Date(b.id).getTime();
-        if (isNaN(dateA) || isNaN(dateB)) return 0;
-        return dateB - dateA;
     });
   }, [items, statusFilter, typeFilter]);
 
-  const handleClearLibrary = () => {
+  const handleClearLibrary = async () => {
+    if (!user) return;
     try {
-      localStorage.removeItem(LIBRARY_KEY);
-      setItems([]);
-      window.dispatchEvent(new StorageEvent('storage', { key: LIBRARY_KEY, newValue: null }));
+      const libraryRef = collection(firestore, 'users', user.uid, 'library');
+      const q = query(libraryRef);
+      const querySnapshot = await getDocs(q);
+      
+      const batch = writeBatch(firestore);
+      querySnapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      
+      await batch.commit();
+
       toast({
         title: 'Bibliothèque vidée',
         description: 'Tous les éléments ont été supprimés de votre bibliothèque.',
@@ -89,11 +69,33 @@ export default function LibraryView() {
         title: 'Erreur',
         description: 'Impossible de vider la bibliothèque.',
       });
+       console.error("Error clearing library: ", error);
     }
   };
 
-  if (!isMounted) {
-    return null; 
+  const isLoading = userLoading || itemsLoading;
+
+  if (isLoading) {
+      return (
+          <div className="flex-1 p-8 text-center">
+              <p>Chargement de votre bibliothèque...</p>
+          </div>
+      )
+  }
+
+  if (!user && !userLoading) {
+    return (
+        <main className="flex-1 p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col items-center justify-center text-center h-[70vh] bg-muted/50 rounded-lg">
+                <LogIn className="w-16 h-16 text-muted-foreground mb-4"/>
+                <h2 className="text-2xl font-bold mb-2">Connectez-vous pour voir votre bibliothèque</h2>
+                <p className="text-muted-foreground">Votre collection personnelle de films et séries vous attend.</p>
+                <Button onClick={() => router.push('/')} className="mt-6">
+                  Retour à l'accueil
+                </Button>
+            </div>
+        </main>
+    );
   }
 
   return (
@@ -156,13 +158,11 @@ export default function LibraryView() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold font-headline">Ma Bibliothèque</h1>
              <div className="flex items-center gap-4">
-               <Button asChild>
-                <Link href="/">
+               <Button onClick={() => router.push('/')}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Ajouter
-                </Link>
-              </Button>
-              {items.length > 0 && (
+                </Button>
+              {items && items.length > 0 && (
                    <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="sm">

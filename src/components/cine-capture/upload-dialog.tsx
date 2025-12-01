@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useActionState } from 'react';
-import { UploadCloud, Loader2, Star, Users, FileText, X, Film, Tv } from 'lucide-react';
+import { UploadCloud, Loader2, Star, Users, FileText, X, Film, Tv, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import { processScreenshot } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -12,14 +13,15 @@ import type { MediaItem } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+
 
 const initialState = {
   data: null,
   error: null,
   success: false,
 };
-
-const LIBRARY_KEY = 'cine-capture-library';
 
 export default function UploadDialog() {
   const [state, formAction, isPending] = useActionState(processScreenshot, initialState);
@@ -30,6 +32,8 @@ export default function UploadDialog() {
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
 
 
   useEffect(() => {
@@ -71,18 +75,23 @@ export default function UploadDialog() {
     handleFileSelect(e.dataTransfer.files?.[0] || null);
   };
 
-  const handleAddToLibrary = () => {
-    if (!state.data) return;
+  const handleAddToLibrary = async () => {
+    if (!state.data || !user) {
+      toast({
+          variant: 'destructive',
+          title: 'Non connecté',
+          description: 'Vous devez être connecté pour ajouter un élément à votre bibliothèque.',
+      });
+      return;
+    };
 
     try {
-      const localData = localStorage.getItem(LIBRARY_KEY);
-      const library: MediaItem[] = localData ? JSON.parse(localData) : [];
+      const libraryRef = collection(firestore, 'users', user.uid, 'library');
       
-      const isDuplicate = library.some(
-        item => item.title.trim().toLowerCase() === state.data!.title.trim().toLowerCase()
-      );
+      const q = query(libraryRef, where('title', '==', state.data.title.trim()));
+      const querySnapshot = await getDocs(q);
 
-      if (isDuplicate) {
+      if (!querySnapshot.empty) {
         toast({
           variant: 'destructive',
           title: 'Élément déjà existant',
@@ -91,23 +100,18 @@ export default function UploadDialog() {
         return; 
       }
 
-      const newItem: MediaItem = {
+      const newItem = {
         ...state.data,
-        id: Date.now().toString(), // Use a simple timestamp as ID
+        userId: user.uid,
         status: 'unwatched', 
         genres: state.data.genres || [],
         posterUrl: state.data.posterUrl || '',
         summary: state.data.summary || '',
         cast: state.data.cast || [],
+        addedAt: serverTimestamp(),
       };
       
-      const newLibrary = [...library, newItem];
-      localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
-       // Manually dispatch a storage event for other components to react
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: LIBRARY_KEY,
-        newValue: JSON.stringify(newLibrary)
-      }));
+      await addDoc(libraryRef, newItem);
       
       toast({
         title: 'Ajouté à la bibliothèque !',
@@ -148,6 +152,15 @@ export default function UploadDialog() {
     series: 'Série',
     miniseries: 'Mini-série',
   };
+  
+  if (!user && !userLoading) {
+    return (
+        <div className="flex flex-col items-center justify-center space-y-4 text-center p-4 bg-muted/50 rounded-lg">
+            <LogIn className="h-10 w-10 text-muted-foreground" />
+            <p className="font-semibold text-muted-foreground">Veuillez vous connecter pour ajouter un film via une capture d'écran.</p>
+        </div>
+    )
+  }
 
   return (
     <>
@@ -189,7 +202,7 @@ export default function UploadDialog() {
         </div>
         <Button 
           type="submit" 
-          disabled={!preview || isPending} 
+          disabled={!preview || isPending || !user} 
           className="w-full"
           size="lg"
         >

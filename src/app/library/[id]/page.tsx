@@ -1,10 +1,11 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/app-layout';
 import { Badge } from '@/components/ui/badge';
@@ -29,8 +30,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const LIBRARY_KEY = 'cine-capture-library';
+import { useDoc, useFirestore, useUser } from '@/firebase';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 const statusInfo: Record<MediaStatus, { Icon: React.ElementType; label: string; color: string; }> = {
   watched: { Icon: CheckCircle, label: 'Vu', color: 'text-green-400' },
@@ -48,51 +49,20 @@ export default function MediaDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
   const id = params.id as string;
 
-  const [item, setItem] = useState<MediaItem | null | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
+  const docPath = user && id ? `users/${user.uid}/library/${id}` : '';
+  const { data: item, loading: itemLoading, error } = useDoc<MediaItem>(docPath);
 
-  useEffect(() => {
-    setLoading(true);
-    if (id) {
-      try {
-        const localData = localStorage.getItem(LIBRARY_KEY);
-        if (localData) {
-          const library: MediaItem[] = JSON.parse(localData);
-          const foundItem = library.find(i => i.id === id);
-          setItem(foundItem || null);
-        } else {
-          setItem(null);
-        }
-      } catch (error) {
-        console.error("Failed to find item in localStorage:", error);
-        setItem(null);
-      } finally {
-         setLoading(false);
-      }
-    } else {
-       setLoading(false);
-    }
-  }, [id]);
+  const updateStatus = async (newStatus: MediaStatus) => {
+    if (!item || !user) return;
 
-  const updateStatus = (newStatus: MediaStatus) => {
-    if (!item) return;
-
-    const updatedItem = { ...item, status: newStatus };
-    setItem(updatedItem);
-
+    const docRef = doc(firestore, 'users', user.uid, 'library', item.id);
+    
     try {
-      const localData = localStorage.getItem(LIBRARY_KEY);
-      const library: MediaItem[] = localData ? JSON.parse(localData) : [];
-      const newLibrary = library.map(i => (i.id === id ? updatedItem : i));
-      localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
-
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: LIBRARY_KEY,
-        newValue: JSON.stringify(newLibrary)
-      }));
-
+      await updateDoc(docRef, { status: newStatus });
       toast({
         title: 'Statut mis à jour',
         description: `Le statut de "${item.title}" est maintenant "${statusInfo[newStatus].label}".`,
@@ -104,23 +74,14 @@ export default function MediaDetailPage() {
         title: 'Erreur',
         description: "Une erreur s'est produite lors de la mise à jour."
       });
-      // Revert UI change on error
-      setItem(item);
     }
   };
 
-  const handleDelete = () => {
-    if (!item) return;
+  const handleDelete = async () => {
+    if (!item || !user) return;
     try {
-      const localData = localStorage.getItem(LIBRARY_KEY);
-      const library: MediaItem[] = localData ? JSON.parse(localData) : [];
-      const newLibrary = library.filter(i => i.id !== item.id);
-      localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
-
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: LIBRARY_KEY,
-        newValue: JSON.stringify(newLibrary)
-      }));
+       const docRef = doc(firestore, 'users', user.uid, 'library', item.id);
+       await deleteDoc(docRef);
 
       toast({
         title: 'Élément supprimé',
@@ -136,8 +97,10 @@ export default function MediaDetailPage() {
       });
     }
   };
+  
+  const isLoading = userLoading || itemLoading;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <AppLayout>
         <div className="container mx-auto px-4 py-8 text-center">Chargement des détails...</div>
@@ -145,7 +108,32 @@ export default function MediaDetailPage() {
     );
   }
 
-  if (item === null || item === undefined) {
+  if (!user && !userLoading) {
+     return (
+      <AppLayout>
+        <main className="container mx-auto px-4 py-8">
+           <div className="mb-6">
+             <Button asChild variant="outline">
+                <Link href="/library">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Retour à la bibliothèque
+                </Link>
+              </Button>
+           </div>
+           <Alert>
+              <LogIn className="h-4 w-4" />
+              <AlertTitle>Non connecté</AlertTitle>
+              <AlertDescription>
+                Vous devez être connecté pour voir les détails de cet élément.
+              </AlertDescription>
+           </Alert>
+        </main>
+      </AppLayout>
+    );
+  }
+
+
+  if (!item && !isLoading) {
     return (
       <AppLayout>
         <main className="container mx-auto px-4 py-8">
@@ -159,12 +147,16 @@ export default function MediaDetailPage() {
            </div>
            <Alert variant="destructive">
             <AlertTitle>Erreur</AlertTitle>
-            <AlertDescription>{"L'élément demandé n'a pas été trouvé dans votre bibliothèque. Avez-vous vidé le cache ou créé cet élément sur un autre appareil ?"}</AlertDescription>
+            <AlertDescription>{"L'élément demandé n'a pas été trouvé dans votre bibliothèque."}</AlertDescription>
            </Alert>
         </main>
       </AppLayout>
     );
   }
+  
+  // This should not happen if the logic above is correct, but as a safeguard.
+  if (!item) return null;
+
 
   const { Icon: StatusIcon, label: statusLabel, color: statusColor } = statusInfo[item.status];
   const typeIcon = item.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />;

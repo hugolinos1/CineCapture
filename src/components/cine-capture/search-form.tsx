@@ -1,20 +1,23 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useActionState } from 'react';
-import { Loader2, Star, Users, FileText, Film, Tv } from 'lucide-react';
+import { Loader2, Star, Users, FileText, Film, Tv, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import { processTextSearch } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import type { MediaItem } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+
 
 const initialState = {
   data: null,
@@ -22,14 +25,14 @@ const initialState = {
   success: false,
 };
 
-const LIBRARY_KEY = 'cine-capture-library';
-
 export default function SearchForm() {
   const [state, formAction, isPending] = useActionState(processTextSearch, initialState);
   const [isResultOpen, setIsResultOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
 
 
   useEffect(() => {
@@ -44,19 +47,24 @@ export default function SearchForm() {
     }
   }, [state, toast]);
 
-  const handleAddToLibrary = () => {
-    if (!state.data) return;
+  const handleAddToLibrary = async () => {
+    if (!state.data || !user) {
+        toast({
+            variant: 'destructive',
+            title: 'Non connecté',
+            description: 'Vous devez être connecté pour ajouter un élément à votre bibliothèque.',
+        });
+        return;
+    }
 
     try {
-      const localData = localStorage.getItem(LIBRARY_KEY);
-      const library: MediaItem[] = localData ? JSON.parse(localData) : [];
-      
-      const isDuplicate = library.some(
-        item => item.title.trim().toLowerCase() === state.data!.title.trim().toLowerCase()
-      );
+      const libraryRef = collection(firestore, 'users', user.uid, 'library');
 
-      if (isDuplicate) {
-        toast({
+      const q = query(libraryRef, where('title', '==', state.data.title.trim()));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+         toast({
           variant: 'destructive',
           title: 'Élément déjà existant',
           description: `"${state.data.title}" est déjà dans votre bibliothèque.`,
@@ -64,22 +72,18 @@ export default function SearchForm() {
         return; 
       }
 
-      const newItem: MediaItem = {
+      const newItem = {
         ...state.data,
-        id: Date.now().toString(),
+        userId: user.uid,
         status: 'unwatched', 
         genres: state.data.genres || [],
         posterUrl: state.data.posterUrl || '',
         summary: state.data.summary || '',
         cast: state.data.cast || [],
+        addedAt: serverTimestamp(),
       };
       
-      const newLibrary = [...library, newItem];
-      localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: LIBRARY_KEY,
-        newValue: JSON.stringify(newLibrary)
-      }));
+      await addDoc(libraryRef, newItem);
       
       toast({
         title: 'Ajouté à la bibliothèque !',
@@ -109,6 +113,15 @@ export default function SearchForm() {
     series: 'Série',
     miniseries: 'Mini-série',
   };
+  
+  if (!user && !userLoading) {
+    return (
+        <div className="flex flex-col items-center justify-center space-y-4 text-center p-4 bg-muted/50 rounded-lg">
+            <LogIn className="h-10 w-10 text-muted-foreground" />
+            <p className="font-semibold text-muted-foreground">Veuillez vous connecter pour rechercher et ajouter un film.</p>
+        </div>
+    )
+  }
 
   return (
     <>
@@ -137,7 +150,7 @@ export default function SearchForm() {
         </RadioGroup>
         <Button 
           type="submit" 
-          disabled={isPending} 
+          disabled={isPending || !user} 
           className="w-full"
           size="lg"
         >
