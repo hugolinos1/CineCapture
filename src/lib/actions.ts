@@ -11,17 +11,17 @@ export async function processScreenshot(
 ): Promise<{ data: EnrichedMovieDetails | null; error: string | null; success: boolean }> {
   const dataUri = formData.get('screenshot') as string;
 
-  try {
-    if (!dataUri) {
-      throw new Error('Aucune donnée d\'image fournie.');
-    }
+  if (!dataUri) {
+    return { data: null, error: 'Aucune image fournie.', success: false };
+  }
 
+  try {
     const extractedDetails = await extractMovieDetailsFromScreenshot({
       photoDataUri: dataUri,
     });
 
     if (!extractedDetails || !extractedDetails.title) {
-        throw new Error('Impossible d\'extraire un titre de la capture d\'écran.');
+        throw new Error("Impossible d'extraire les détails de la capture d'écran.");
     }
 
     const enrichedDetails = await enrichExtractedMovieDetails(extractedDetails);

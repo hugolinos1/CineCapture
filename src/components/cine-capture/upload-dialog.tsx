@@ -21,7 +21,6 @@ const initialState = {
 
 export default function UploadDialog() {
   const [state, formAction, isPending] = useActionState(processScreenshot, initialState);
-
   const [preview, setPreview] = useState<string | null>(null);
   const [isResultOpen, setIsResultOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
