@@ -12,13 +12,14 @@ import type { MediaItem } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
-import { useLibrary } from '@/hooks/use-library';
 
 const initialState = {
   data: null,
   error: null,
   success: false,
 };
+
+const LIBRARY_KEY = 'cine-capture-library';
 
 export default function UploadDialog() {
   const [state, formAction, isPending] = useActionState(processScreenshot, initialState);
@@ -29,7 +30,6 @@ export default function UploadDialog() {
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
   const router = useRouter();
-  const { addItem, isDuplicate } = useLibrary();
 
 
   useEffect(() => {
@@ -74,16 +74,23 @@ export default function UploadDialog() {
   const handleAddToLibrary = () => {
     if (!state.data) return;
 
-    if (isDuplicate(state.data.title)) {
-      toast({
-        variant: 'destructive',
-        title: 'Élément déjà existant',
-        description: `"${state.data.title}" est déjà dans votre bibliothèque.`,
-      });
-      return; 
-    }
-
     try {
+      const localData = localStorage.getItem(LIBRARY_KEY);
+      const library: MediaItem[] = localData ? JSON.parse(localData) : [];
+      
+      const isDuplicate = library.some(
+        item => item.title.trim().toLowerCase() === state.data!.title.trim().toLowerCase()
+      );
+
+      if (isDuplicate) {
+        toast({
+          variant: 'destructive',
+          title: 'Élément déjà existant',
+          description: `"${state.data.title}" est déjà dans votre bibliothèque.`,
+        });
+        return; 
+      }
+
       const newItem: MediaItem = {
         ...state.data,
         id: new Date().toISOString(),
@@ -94,7 +101,13 @@ export default function UploadDialog() {
         cast: state.data.cast || [],
       };
       
-      addItem(newItem);
+      const newLibrary = [...library, newItem];
+      localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
+       // Manually dispatch a storage event for other components to react
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: LIBRARY_KEY,
+        newValue: JSON.stringify(newLibrary)
+      }));
       
       toast({
         title: 'Ajouté à la bibliothèque !',

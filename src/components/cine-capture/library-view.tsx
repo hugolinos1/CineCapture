@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
@@ -18,14 +18,44 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { useLibrary } from '@/hooks/use-library';
+
+const LIBRARY_KEY = 'cine-capture-library';
 
 export default function LibraryView() {
-  const { items, deleteItem, isMounted } = useLibrary();
+  const [items, setItems] = useState<MediaItem[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
   const [itemToDelete, setItemToDelete] = useState<MediaItem | null>(null);
   const { toast } = useToast();
+
+  const loadLibrary = useCallback(() => {
+    try {
+      const localData = localStorage.getItem(LIBRARY_KEY);
+      if (localData) {
+        setItems(JSON.parse(localData));
+      }
+    } catch (error) {
+      console.error("Failed to load library from localStorage:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLibrary();
+    setIsMounted(true);
+    
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === LIBRARY_KEY) {
+        loadLibrary();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [loadLibrary]);
 
   const handleDeleteRequest = (item: MediaItem) => {
     setItemToDelete(item);
@@ -34,7 +64,9 @@ export default function LibraryView() {
   const confirmDelete = () => {
     if (!itemToDelete) return;
     
-    deleteItem(itemToDelete.id);
+    const newItems = items.filter(item => item.id !== itemToDelete.id);
+    setItems(newItems);
+    localStorage.setItem(LIBRARY_KEY, JSON.stringify(newItems));
 
     toast({
       title: 'Élément supprimé',

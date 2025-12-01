@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,7 +23,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { useLibrary } from '@/hooks/use-library';
+
+const LIBRARY_KEY = 'cine-capture-library';
 
 const statusInfo = {
   watched: { Icon: CheckCircle, label: 'Vu', color: 'text-green-400' },
@@ -36,22 +37,44 @@ export default function MediaDetailPage() {
   const router = useRouter();
   const { toast } = useToast();
   const id = params.id as string;
-  const { findItem, deleteItem, isMounted } = useLibrary();
 
   const [item, setItem] = useState<MediaItem | null | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+
+  const findItem = useCallback((itemId: string): MediaItem | null => {
+    try {
+      const localData = localStorage.getItem(LIBRARY_KEY);
+      if (!localData) return null;
+      const library: MediaItem[] = JSON.parse(localData);
+      return library.find(i => i.id === itemId) || null;
+    } catch (error) {
+      console.error("Failed to find item in localStorage:", error);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
-    // On attend que le hook soit monté et ait chargé les données de localStorage.
-    if (isMounted) {
+    if (id) {
       const foundItem = findItem(id);
       setItem(foundItem);
     }
-  }, [id, isMounted, findItem]);
+    setLoading(false);
+  }, [id, findItem]);
 
   const handleDelete = () => {
     if (!item) return;
     try {
-      deleteItem(item.id);
+      const localData = localStorage.getItem(LIBRARY_KEY);
+      const library: MediaItem[] = localData ? JSON.parse(localData) : [];
+      const newLibrary = library.filter(i => i.id !== item.id);
+      localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
+
+      // Manually dispatch a storage event for other components to react
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: LIBRARY_KEY,
+        newValue: JSON.stringify(newLibrary)
+      }));
+
       toast({
         title: 'Élément supprimé',
         description: `"${item.title}" a été supprimé de votre bibliothèque.`,
@@ -67,8 +90,7 @@ export default function MediaDetailPage() {
     }
   };
 
-  // On affiche un état de chargement tant que le hook n'est pas prêt.
-  if (!isMounted || item === undefined) {
+  if (loading) {
     return (
       <AppLayout>
         <div className="container mx-auto px-4 py-8 text-center">Chargement des détails...</div>
@@ -76,8 +98,7 @@ export default function MediaDetailPage() {
     );
   }
 
-  // Si après le chargement, l'élément n'est toujours pas trouvé, on affiche l'erreur.
-  if (item === null) {
+  if (item === null || item === undefined) {
     return (
       <AppLayout>
         <main className="container mx-auto px-4 py-8">
