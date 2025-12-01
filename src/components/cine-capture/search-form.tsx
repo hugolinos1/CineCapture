@@ -90,8 +90,8 @@ export default function SearchForm() {
         description: `${newItem.title} a été ajouté à votre bibliothèque personnelle.`,
       });
       
-      reset();
       router.push('/library');
+      reset();
     } catch (error) {
       console.error("Failed to add to library:", error);
       toast({
