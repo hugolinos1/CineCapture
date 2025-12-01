@@ -42,6 +42,7 @@ export default function MediaDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     if (id) {
       try {
         const localData = localStorage.getItem(LIBRARY_KEY);
@@ -50,7 +51,7 @@ export default function MediaDetailPage() {
           const foundItem = library.find(i => i.id === id);
           setItem(foundItem || null);
         } else {
-          setItem(null);
+          setItem(null); // No library data found
         }
       } catch (error) {
         console.error("Failed to find item in localStorage:", error);
@@ -71,6 +72,7 @@ export default function MediaDetailPage() {
       const newLibrary = library.filter(i => i.id !== item.id);
       localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
 
+      // This event is for other tabs/windows to update
       window.dispatchEvent(new StorageEvent('storage', {
         key: LIBRARY_KEY,
         newValue: JSON.stringify(newLibrary)
