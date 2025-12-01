@@ -41,9 +41,10 @@ export default function MediaDetailPage() {
   const [item, setItem] = useState<MediaItem | null | undefined>(undefined);
 
   useEffect(() => {
-    if (isMounted && id) {
-        const foundItem = findItem(id);
-        setItem(foundItem);
+    // On attend que le hook soit monté et ait chargé les données de localStorage.
+    if (isMounted) {
+      const foundItem = findItem(id);
+      setItem(foundItem);
     }
   }, [id, isMounted, findItem]);
 
@@ -66,6 +67,7 @@ export default function MediaDetailPage() {
     }
   };
 
+  // On affiche un état de chargement tant que le hook n'est pas prêt.
   if (!isMounted || item === undefined) {
     return (
       <AppLayout>
@@ -74,6 +76,7 @@ export default function MediaDetailPage() {
     );
   }
 
+  // Si après le chargement, l'élément n'est toujours pas trouvé, on affiche l'erreur.
   if (item === null) {
     return (
       <AppLayout>
