@@ -1,12 +1,13 @@
 'use server';
 
 /**
- * @fileOverview Enriches extracted movie details with additional information from online movie databases.
- * Uses multiple sources with fallback strategy for better poster retrieval.
+ * @fileOverview Enriches extracted movie details with additional information from online movie databases,
+ * using a dedicated tool for poster retrieval via the TMDB API.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { findMediaOnTmdb } from '../tools/tmdb';
 
 const EnrichExtractedMovieDetailsInputSchema = z.object({
   title: z.string().describe('The title of the movie or series.'),
@@ -41,66 +42,41 @@ export async function enrichExtractedMovieDetails(
 
 const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   name: 'enrichExtractedMovieDetailsPrompt',
+  tools: [findMediaOnTmdb],
   input: {schema: EnrichExtractedMovieDetailsInputSchema},
   output: {schema: EnrichExtractedMovieDetailsOutputSchema},
-  prompt: `Vous êtes un assistant IA expert en cinéma et séries. Votre mission est d'enrichir les informations de base fournies pour un film ou une série en utilisant PLUSIEURS sources de données. Toutes les informations textuelles (synopsis, genres) DOIVENT être en français.
+  prompt: `Vous êtes un assistant IA expert en cinéma et séries. Votre mission est d'enrichir les informations fournies pour un film ou une série. Toutes les informations textuelles (synopsis, genres) DOIVENT être en français.
 
   Informations de base:
   Titre: {{{title}}}
   Type: {{{type}}}
   Résumé initial: {{{summary}}}
   
-  STRATÉGIE DE RECHERCHE MULTI-SOURCES (tentez dans cet ordre):
-  
-  ## SOURCE 1 (PRIORITAIRE): The Movie Database (TMDb)
-  1. Cherchez sur www.themoviedb.org
-  2. Identifiez le "poster_path" (ex: /8Y43POKJJhOi7eU5ieDUAeyD_H9.jpg)
-  3. Construisez l'URL: https://image.tmdb.org/t/p/w780{poster_path}
-     ⚠️ Utilisez "w780" pour une bonne qualité et une haute disponibilité.
-     Exemple: https://image.tmdb.org/t/p/w780/8Y43POKJJhOi7eU5ieDUAeyD_H9.jpg
-  
-  ## SOURCE 2 (FALLBACK): IMDb
-  Si TMDb échoue:
-  1. Cherchez sur www.imdb.com
-  2. Trouvez l'image principale de la page du film/série
-  3. Utilisez l'URL directe de l'image (format: https://m.media-amazon.com/images/M/...)
-  
-  ## SOURCE 3 (FALLBACK): OMDb API
-  Si IMDb échoue:
-  1. Cherchez via www.omdbapi.com
-  2. Utilisez le champ "Poster" qui contient une URL directe
-  
-  ## SOURCE 4 (DERNIER RECOURS): Recherche d'images générale
-  Si toutes les sources échouent:
-  1. Effectuez une recherche d'images pour "{title} poster official"
-  2. Privilégiez les URLs de sites officiels ou de haute qualité
-  3. Vérifiez que l'URL se termine par .jpg, .jpeg ou .png
+  Marche à suivre:
+  1.  Utilisez l'outil 'findMediaOnTmdb' fourni pour obtenir les informations structurées, y compris l'URL de l'affiche.
+  2.  À partir des informations de l'outil et de vos connaissances, générez les informations complémentaires suivantes :
+      - Un synopsis détaillé et engageant en français.
+      - La distribution principale (5-10 acteurs principaux).
+      - La liste complète des genres, en français.
+      - La note sur 10.
+  3.  Assurez-vous que le titre et le type correspondent à l'entrée.
+  4.  Renseignez le champ 'source' avec la valeur retournée par l'outil.
   
   RÈGLES CRITIQUES:
-  - L'URL de l'affiche DOIT être une URL d'image directe (pas une page web)
-  - L'URL DOIT être accessible publiquement (pas de liens authentifiés)
-  - Préférez toujours la plus haute résolution disponible et fiable ("w780" est un excellent choix).
-  - Testez mentalement si l'URL est valide avant de la retourner. Elle doit commencer par https:// et finir par une extension d'image.
-  - Si AUCUNE affiche n'est trouvée après toutes les tentatives, retournez une chaîne vide "" pour le posterUrl.
-  
-  INFORMATIONS COMPLÉMENTAIRES:
-  - Synopsis détaillé en français
-  - Distribution principale (5-10 acteurs principaux)
-  - Genres (liste complète, en français)
-  - Note (sur 10, convertissez si nécessaire)
-  - Indiquez dans le champ "source" quelle base de données a été utilisée avec succès pour l'affiche.
-  
+  - L'URL de l'affiche ('posterUrl') DOIT provenir exclusivement du résultat de l'outil 'findMediaOnTmdb'. Ne l'inventez jamais et ne la cherchez pas ailleurs.
+  - Si l'outil ne retourne pas d'URL pour l'affiche, retournez une chaîne vide "".
+
   Retournez toutes les informations au format JSON.`,
 });
 
 async function verifyImageUrl(url: string): Promise<boolean> {
-  if (!url) return false;
-  try {
-    const response = await fetch(url, { method: 'HEAD' });
-    return response.ok && response.headers.get('content-type')?.startsWith('image/');
-  } catch {
-    return false;
-  }
+    if (!url) return false;
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok && response.headers.get('content-type')?.startsWith('image/');
+    } catch {
+        return false;
+    }
 }
 
 const enrichExtractedMovieDetailsFlow = ai.defineFlow(
