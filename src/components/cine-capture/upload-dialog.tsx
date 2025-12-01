@@ -93,7 +93,7 @@ export default function UploadDialog() {
 
       const newItem: MediaItem = {
         ...state.data,
-        id: new Date().toISOString(),
+        id: Date.now().toString(), // Use a simple timestamp as ID
         status: 'unwatched', 
         genres: state.data.genres || [],
         posterUrl: state.data.posterUrl || '',
@@ -164,6 +164,7 @@ export default function UploadDialog() {
             className="hidden" 
             onChange={handleFileChange}
             accept="image/*"
+            required
           />
 
           {preview ? (

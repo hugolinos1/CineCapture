@@ -7,7 +7,6 @@ import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
 import { Film } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
-import { useToast } from '@/hooks/use-toast';
 
 const LIBRARY_KEY = 'cine-capture-library';
 
@@ -16,7 +15,6 @@ export default function LibraryView() {
   const [isMounted, setIsMounted] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
-  const { toast } = useToast();
 
   const loadLibrary = useCallback(() => {
     try {
@@ -51,7 +49,7 @@ export default function LibraryView() {
       const statusMatch = statusFilter === 'all' || item.status === statusFilter;
       const typeMatch = typeFilter === 'all' || item.type === typeFilter;
       return statusMatch && typeMatch;
-    }).sort((a, b) => a.title.localeCompare(b.title));
+    }).sort((a, b) => new Date(b.id).getTime() - new Date(a.id).getTime()); // Sort by creation date
   }, [items, statusFilter, typeFilter]);
 
   if (!isMounted) {
