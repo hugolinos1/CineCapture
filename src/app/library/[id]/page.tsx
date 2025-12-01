@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -24,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useLibrary } from '@/hooks/use-library';
 
 const statusInfo = {
   watched: { Icon: CheckCircle, label: 'Vu', color: 'text-green-400' },
@@ -36,61 +36,37 @@ export default function MediaDetailPage() {
   const router = useRouter();
   const { toast } = useToast();
   const id = params.id as string;
-  const [item, setItem] = useState<MediaItem | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { findItem, deleteItem, isMounted } = useLibrary();
+
+  const [item, setItem] = useState<MediaItem | null | undefined>(undefined);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && id) {
-      try {
-        const localData = localStorage.getItem('cine-capture-library');
-        if (localData) {
-          const allItems: MediaItem[] = JSON.parse(localData);
-          const foundItem = allItems.find((i) => i.id === id);
-          if (foundItem) {
-            setItem(foundItem);
-          } else {
-            setError("L'élément demandé n'a pas été trouvé dans votre bibliothèque.");
-          }
-        } else {
-           setError("Votre bibliothèque est vide. Impossible de trouver l'élément.");
-        }
-      } catch (e) {
-        console.error("Erreur lors du chargement de l'élément de la bibliothèque:", e);
-        setError("Une erreur s'est produite lors de la récupération des détails.");
-      } finally {
-        setIsLoading(false);
-      }
+    if (isMounted && id) {
+        const foundItem = findItem(id);
+        setItem(foundItem);
     }
-  }, [id]);
+  }, [id, isMounted, findItem]);
 
   const handleDelete = () => {
     if (!item) return;
     try {
-      const localData = localStorage.getItem('cine-capture-library');
-      if (localData) {
-        const allItems: MediaItem[] = JSON.parse(localData);
-        const updatedLibrary = allItems.filter(i => i.id !== item.id);
-        localStorage.setItem('cine-capture-library', JSON.stringify(updatedLibrary));
-
-        // Dispatch storage event to notify other components like the library view
-        window.dispatchEvent(new Event('storage'));
-
-        toast({
-          title: 'Élément supprimé',
-          description: `"${item.title}" a été supprimé de votre bibliothèque.`,
-        });
-
-        router.push('/library');
-      }
+      deleteItem(item.id);
+      toast({
+        title: 'Élément supprimé',
+        description: `"${item.title}" a été supprimé de votre bibliothèque.`,
+      });
+      router.push('/library');
     } catch (e) {
       console.error("Erreur lors de la suppression de l'élément:", e);
-      setError("Une erreur s'est produite lors de la suppression.");
+      toast({
+          variant: "destructive",
+          title: 'Erreur',
+          description: "Une erreur s'est produite lors de la suppression."
+      });
     }
   };
 
-
-  if (isLoading) {
+  if (!isMounted || item === undefined) {
     return (
       <AppLayout>
         <div className="container mx-auto px-4 py-8 text-center">Chargement des détails...</div>
@@ -98,7 +74,7 @@ export default function MediaDetailPage() {
     );
   }
 
-  if (error || !item) {
+  if (item === null) {
     return (
       <AppLayout>
         <main className="container mx-auto px-4 py-8">
@@ -112,7 +88,7 @@ export default function MediaDetailPage() {
            </div>
            <Alert variant="destructive">
             <AlertTitle>Erreur</AlertTitle>
-            <AlertDescription>{error || "Impossible de charger les détails de cet élément."}</AlertDescription>
+            <AlertDescription>{"L'élément demandé n'a pas été trouvé dans votre bibliothèque."}</AlertDescription>
            </Alert>
         </main>
       </AppLayout>
@@ -219,5 +195,3 @@ export default function MediaDetailPage() {
     </AppLayout>
   );
 }
-
-    

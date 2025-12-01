@@ -12,6 +12,7 @@ import type { MediaItem } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
+import { useLibrary } from '@/hooks/use-library';
 
 const initialState = {
   data: null,
@@ -28,6 +29,7 @@ export default function UploadDialog() {
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const { addItem, isDuplicate } = useLibrary();
 
 
   useEffect(() => {
@@ -72,22 +74,16 @@ export default function UploadDialog() {
   const handleAddToLibrary = () => {
     if (!state.data) return;
 
+    if (isDuplicate(state.data.title)) {
+      toast({
+        variant: 'destructive',
+        title: 'Élément déjà existant',
+        description: `"${state.data.title}" est déjà dans votre bibliothèque.`,
+      });
+      return; 
+    }
+
     try {
-      const existingLibrary: MediaItem[] = JSON.parse(localStorage.getItem('cine-capture-library') || '[]');
-      
-      const isDuplicate = existingLibrary.some(
-        item => item.title.trim().toLowerCase() === state.data!.title.trim().toLowerCase()
-      );
-
-      if (isDuplicate) {
-        toast({
-          variant: 'destructive',
-          title: 'Élément déjà existant',
-          description: `"${state.data.title}" est déjà dans votre bibliothèque.`,
-        });
-        return; 
-      }
-
       const newItem: MediaItem = {
         ...state.data,
         id: new Date().toISOString(),
@@ -98,15 +94,12 @@ export default function UploadDialog() {
         cast: state.data.cast || [],
       };
       
-      const updatedLibrary = [...existingLibrary, newItem];
-      localStorage.setItem('cine-capture-library', JSON.stringify(updatedLibrary));
+      addItem(newItem);
       
       toast({
         title: 'Ajouté à la bibliothèque !',
         description: `${newItem.title} a été ajouté à votre bibliothèque personnelle.`,
       });
-      
-      window.dispatchEvent(new Event('storage'));
       
       reset();
       router.push('/library');
