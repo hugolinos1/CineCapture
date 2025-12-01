@@ -53,7 +53,6 @@ export default function UploadDialog() {
         title: 'L\'analyse a échoué',
         description: state.error,
       });
-      // Reset form but keep preview for resubmission if needed
     }
   }, [state, toast]);
 
@@ -89,8 +88,11 @@ export default function UploadDialog() {
     const newItem: MediaItem = {
       ...state.data,
       id: new Date().toISOString(),
-      status: 'unwatched', // Default status
-      genres: state.data.genres || [], // Ensure genres is an array
+      status: 'unwatched', 
+      genres: state.data.genres || [],
+      posterUrl: state.data.posterUrl || '',
+      summary: state.data.summary || '',
+      cast: state.data.cast || [],
     };
 
     try {
@@ -170,7 +172,7 @@ export default function UploadDialog() {
               onChange={handleFileChange}
               className="hidden"
               accept="image/png, image/jpeg, image/webp"
-              name="file-upload" // Give a name to the input for form reset
+              name="file-upload" 
             />
           </div>
         )}

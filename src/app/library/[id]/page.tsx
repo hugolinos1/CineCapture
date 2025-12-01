@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, notFound, useRouter } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
 import AppLayout from '@/components/layout/app-layout';
 import { Badge } from '@/components/ui/badge';
@@ -28,8 +28,8 @@ export default function MediaDetailPage() {
     if (id) {
       try {
         const localData = localStorage.getItem('cine-capture-library');
-        const localItems = localData ? JSON.parse(localData) : [];
-        const allItems = [...mockLibrary, ...localItems];
+        const localItems: MediaItem[] = localData ? JSON.parse(localData) : [];
+        const allItems = [...localItems, ...mockLibrary];
         const uniqueItems = Array.from(new Map(allItems.map(i => [i.id, i])).values());
         const foundItem = uniqueItems.find((i: MediaItem) => i.id === id);
         
@@ -37,7 +37,7 @@ export default function MediaDetailPage() {
           setItem(foundItem);
         }
       } catch (error) {
-        console.error("Failed to load library item from localStorage:", error);
+        console.error("Failed to load library item:", error);
       } finally {
         setIsLoading(false);
       }
