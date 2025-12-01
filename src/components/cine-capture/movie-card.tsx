@@ -37,11 +37,11 @@ export default function MovieCard({ item, onDeleteRequest }: MovieCardProps) {
             className="object-cover w-full h-full transition-transform duration-300 ease-in-out group-hover:scale-105"
             data-ai-hint="movie poster"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-          <div className="absolute inset-0 flex flex-col justify-end p-4 transition-opacity duration-300">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-               <h3 className="font-bold text-lg text-white drop-shadow-md">{item.title}</h3>
-               <p className="text-xs text-gray-300 line-clamp-2">{item.summary}</p>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+          <div className="absolute inset-0 flex flex-col justify-end p-4">
+            <div>
+               <h3 className="font-bold text-base text-white drop-shadow-md">{item.title}</h3>
+               <p className="text-xs text-gray-300 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{item.summary}</p>
             </div>
           </div>
         </CardContent>
