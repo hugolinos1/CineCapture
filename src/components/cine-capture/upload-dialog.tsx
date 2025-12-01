@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { UploadCloud, Loader2, Star, Users, FileText, X } from 'lucide-react';
+import { UploadCloud, Loader2, Star, Users, FileText, X, Film, Tv, Languages } from 'lucide-react';
 import Image from 'next/image';
 import { processScreenshot } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -181,7 +181,7 @@ export default function UploadDialog() {
           <div className="grid md:grid-cols-2">
             <div className="relative h-full min-h-[400px] hidden md:block">
               <Image
-                src={state.data?.posterUrl || 'https://picsum.photos/seed/placeholder/500/750'}
+                src={state.data?.posterUrl || 'https://picsum.photos/seed/movie-placeholder/500/750'}
                 alt={state.data?.title || 'Affiche de film'}
                 fill
                 className="object-cover rounded-l-lg"
@@ -190,12 +190,15 @@ export default function UploadDialog() {
             </div>
             <div className="p-6 flex flex-col">
               <DialogHeader>
+                 <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
+                    {state.data?.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />}
+                    {state.data?.type === 'movie' ? 'Film' : 'Série'}
+                  </Badge>
                 <DialogTitle className="text-2xl font-headline mb-2">{state.data?.title}</DialogTitle>
               </DialogHeader>
               <ScrollArea className="h-[400px] pr-4 flex-grow">
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <Badge variant="outline" className="capitalize">{state.data?.type}</Badge>
                     {state.data?.rating && (
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
@@ -211,8 +214,18 @@ export default function UploadDialog() {
 
                   <div className='space-y-2'>
                       <h3 className="font-semibold flex items-center gap-2"><Users className="w-4 h-4"/> Distribution</h3>
-                      <p className="text-sm text-muted-foreground">{state.data?.cast.join(', ')}</p>
+                      <p className="text-sm text-muted-foreground">{state.data?.cast?.join(', ')}</p>
                   </div>
+                  {state.data?.genres && state.data.genres.length > 0 && (
+                    <div className='space-y-2'>
+                        <h3 className="font-semibold flex items-center gap-2"><Languages className="w-4 h-4" /> Genres</h3>
+                        <div className="flex flex-wrap gap-2">
+                        {state.data.genres.map(genre => (
+                            <Badge key={genre} variant="secondary">{genre}</Badge>
+                        ))}
+                        </div>
+                    </div>
+                )}
                 </div>
               </ScrollArea>
               <DialogFooter className='pt-6 mt-auto'>

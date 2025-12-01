@@ -25,9 +25,10 @@ const EnrichExtractedMovieDetailsOutputSchema = z.object({
   title: z.string().describe('Le titre du film ou de la série.'),
   type: z.string().describe('Le type de contenu (film ou série).'),
   summary: z.string().describe('Un synopsis détaillé du contenu.'),
-  posterUrl: z.string().describe('URL de l\'affiche du film.'),
+  posterUrl: z.string().describe("L'URL de l'affiche du film, qui doit être une URL d'image valide et accessible au public. Recherchez une image de haute qualité."),
   cast: z.array(z.string()).describe('Liste des principaux acteurs.'),
   rating: z.number().optional().describe('La note du film, si disponible.'),
+  genres: z.array(z.string()).optional().describe('La liste des genres du film ou de la série.'),
 });
 
 export type EnrichExtractedMovieDetailsOutput = z.infer<
@@ -47,13 +48,13 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   prompt: `Vous êtes un assistant IA spécialisé dans l'enrichissement des détails de films et de séries.
   Toutes les réponses textuelles que vous fournissez doivent être en français.
   À partir des informations extraites suivantes, récupérez des détails supplémentaires tels qu'un synopsis détaillé,
-  l'URL de l'affiche du film et les principaux acteurs. Si disponible, incluez également la note.
+  l'URL de l'affiche du film, les principaux acteurs et les genres. Si disponible, incluez également la note.
 
   Titre: {{{title}}}
   Type: {{{type}}}
   Résumé: {{{summary}}}
 
-  Fournissez la sortie au format JSON.
+  Fournissez la sortie au format JSON. L'URL de l'affiche doit être une URL d'image valide et accessible au public.
   `,
 });
 
