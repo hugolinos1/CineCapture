@@ -1,10 +1,11 @@
+
 // Replace the following with your app's Firebase project configuration
 // See: https://support.google.com/firebase/answer/7015592
 export const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID",
+  "projectId": "studio-9567200078-6b0ce",
+  "appId": "1:337644145550:web:42a2ef3b5a0ff5a2c272df",
+  "apiKey": "AIzaSyATwZ6afSqDLViHAlALGmx15CV7JHZgTWk",
+  "authDomain": "studio-9567200078-6b0ce.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "337644145550"
 };
