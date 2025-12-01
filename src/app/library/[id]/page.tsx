@@ -34,10 +34,14 @@ export default function MediaDetailPage() {
       try {
         const localData = localStorage.getItem('cine-capture-library');
         const localItems: MediaItem[] = localData ? JSON.parse(localData) : [];
-        const allItems = [...mockLibrary, ...localItems];
-        // Ensure unique items by ID, giving preference to local items if IDs clash
-        const uniqueItems = Array.from(new Map(allItems.map(i => [i.id, i])).values());
-        const foundItem = uniqueItems.find((i: MediaItem) => i.id === id);
+        
+        // Correctly merge and deduplicate, giving priority to local items
+        const itemMap = new Map<string, MediaItem>();
+        mockLibrary.forEach(item => itemMap.set(item.id, item));
+        localItems.forEach(item => itemMap.set(item.id, item));
+        const allItems = Array.from(itemMap.values());
+
+        const foundItem = allItems.find((i: MediaItem) => i.id === id);
 
         if (foundItem) {
           setItem(foundItem);
