@@ -31,7 +31,7 @@ export default function Header() {
           </Link>
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-4">
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full max-w-sm hidden md:block">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"

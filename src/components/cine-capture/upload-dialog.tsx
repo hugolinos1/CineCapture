@@ -8,9 +8,10 @@ import { processScreenshot } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import type { EnrichedMovieDetails } from '@/lib/types';
+import type { EnrichedMovieDetails, MediaItem } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
+import { useRouter } from 'next/navigation';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -37,6 +38,7 @@ export default function UploadDialog() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     if (state.success && state.data) {
@@ -48,7 +50,7 @@ export default function UploadDialog() {
         description: state.error,
       });
       // Reset preview on error to allow re-submission of the same file
-      setPreview(null);
+      reset();
     }
   }, [state, toast]);
   
@@ -88,11 +90,38 @@ export default function UploadDialog() {
   };
 
   const handleAddToLibrary = () => {
-    toast({
-      title: 'Ajouté à la bibliothèque !',
-      description: `${state.data?.title} a été ajouté à votre bibliothèque personnelle.`,
-    });
-    reset();
+    if (!state.data) return;
+
+    const newItem: MediaItem = {
+      ...state.data,
+      id: new Date().toISOString(),
+      status: 'unwatched', // Default status
+      genres: [], // Genres might not be available from enrichment, default to empty
+    };
+
+    try {
+      const existingLibrary = JSON.parse(localStorage.getItem('cine-capture-library') || '[]');
+      const updatedLibrary = [...existingLibrary, newItem];
+      localStorage.setItem('cine-capture-library', JSON.stringify(updatedLibrary));
+      
+      toast({
+        title: 'Ajouté à la bibliothèque !',
+        description: `${newItem.title} a été ajouté à votre bibliothèque personnelle.`,
+      });
+      
+      // Trigger a re-render/re-fetch on the library page
+      window.dispatchEvent(new Event('storage'));
+      
+      reset();
+      router.push('/library');
+    } catch (error) {
+      console.error("Failed to add to library:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible d\'ajouter l\'élément à la bibliothèque.',
+      });
+    }
   };
 
   const reset = () => {

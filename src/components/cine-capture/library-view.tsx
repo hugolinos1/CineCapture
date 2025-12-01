@@ -1,25 +1,60 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import React, { useState, useMemo, useEffect } from 'react';
+import { SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { LayoutGrid, List, CheckCircle, PlayCircle, Clock, Film, Tv } from 'lucide-react';
+import { Film } from 'lucide-react';
 import { Button } from '../ui/button';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
+import { mockLibrary } from '@/lib/mock-data';
 
-export default function LibraryView({ initialItems }: { initialItems: MediaItem[] }) {
+export default function LibraryView() {
+  const [items, setItems] = useState<MediaItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true); // Component has mounted, safe to access localStorage
+    
+    const loadLibrary = () => {
+      try {
+        const localData = localStorage.getItem('cine-capture-library');
+        const localItems = localData ? JSON.parse(localData) : [];
+        // Combine mock data with local data, ensuring no duplicates if IDs overlap
+        const combined = [...mockLibrary, ...localItems];
+        const uniqueItems = Array.from(new Map(combined.map(item => [item.id, item])).values());
+        setItems(uniqueItems);
+      } catch (error) {
+        console.error("Failed to load library from localStorage:", error);
+        setItems(mockLibrary);
+      }
+    };
+    
+    loadLibrary();
+
+    // Listen for custom event to reload library when an item is added
+    window.addEventListener('storage', loadLibrary);
+
+    return () => {
+      window.removeEventListener('storage', loadLibrary);
+    };
+  }, []);
 
   const filteredItems = useMemo(() => {
-    return initialItems.filter(item => {
+    return items.filter(item => {
       const statusMatch = statusFilter === 'all' || item.status === statusFilter;
       const typeMatch = typeFilter === 'all' || item.type === typeFilter;
       return statusMatch && typeMatch;
     });
-  }, [initialItems, statusFilter, typeFilter]);
+  }, [items, statusFilter, typeFilter]);
+
+  if (!isMounted) {
+    // You can return a loader here if you want
+    return null; 
+  }
 
   return (
     <SidebarProvider>
@@ -74,14 +109,6 @@ export default function LibraryView({ initialItems }: { initialItems: MediaItem[
         <main className="flex-1 p-4 sm:p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold font-headline">Ma Bibliothèque</h1>
-            <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon">
-                    <LayoutGrid className="h-4 w-4" />
-                </Button>
-                 <Button variant="ghost" size="icon">
-                    <List className="h-4 w-4" />
-                </Button>
-            </div>
           </div>
           {filteredItems.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
