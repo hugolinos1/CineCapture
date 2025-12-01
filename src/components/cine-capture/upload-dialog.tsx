@@ -32,7 +32,6 @@ export default function UploadDialog() {
   const [initialState, setInitialState] = useState<{ data: EnrichedMovieDetails | null; error: string | null; success: boolean; }>({ data: null, error: null, success: false });
   const [state, formAction] = useActionState(processScreenshot, initialState);
   
-  const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isResultOpen, setIsResultOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,19 +47,28 @@ export default function UploadDialog() {
         title: 'Analysis Failed',
         description: state.error,
       });
+      // Reset preview on error to allow re-submission of the same file
+      setPreview(null);
     }
   }, [state, toast]);
   
+  const handleFileSelect = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUri = reader.result as string;
+      setPreview(dataUri);
+      // Use a FormData object to trigger the action
+      const formData = new FormData();
+      formData.append('screenshot', dataUri);
+      formAction(formData);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-        formRef.current?.requestSubmit();
-      };
-      reader.readAsDataURL(selectedFile);
+      handleFileSelect(selectedFile);
     }
   };
 
@@ -72,13 +80,7 @@ export default function UploadDialog() {
     e.preventDefault();
     const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile) {
-      setFile(droppedFile);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-         formRef.current?.requestSubmit();
-      };
-      reader.readAsDataURL(droppedFile);
+      handleFileSelect(droppedFile);
     }
   };
 
@@ -91,7 +93,6 @@ export default function UploadDialog() {
   };
 
   const reset = () => {
-    setFile(null);
     setPreview(null);
     setIsResultOpen(false);
     setInitialState({ data: null, error: null, success: false });
@@ -101,12 +102,14 @@ export default function UploadDialog() {
 
   return (
     <>
-      <form action={formAction} ref={formRef}>
+      <form action={formAction} ref={formRef} className="hidden">
          <input
           type="hidden"
           name="screenshot"
           value={preview ?? ''}
         />
+        <SubmitButton/>
+      </form>
         <div
           className="flex flex-col items-center justify-center space-y-4 text-center p-8 cursor-pointer"
           onDragOver={handleDragOver}
@@ -124,10 +127,6 @@ export default function UploadDialog() {
             accept="image/png, image/jpeg, image/webp"
           />
         </div>
-        <div className='hidden'>
-          <SubmitButton/>
-        </div>
-      </form>
         
       <Dialog open={isResultOpen} onOpenChange={(open) => !open && reset()}>
         <DialogContent className="sm:max-w-[825px] bg-background p-0">
