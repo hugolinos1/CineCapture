@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -53,13 +53,15 @@ export default function MediaDetailPage() {
   const firestore = useFirestore();
   const id = params.id as string;
 
-  const docPath = user && id ? `users/${user.uid}/library/${id}` : '';
-  const { data: item, loading: itemLoading, error } = useDoc<MediaItem>(docPath);
+  const docRef = useMemo(() => {
+    if (!user || !id || !firestore) return null;
+    return doc(firestore, 'users', user.uid, 'library', id);
+  }, [user, id, firestore]);
+  
+  const { data: item, loading: itemLoading, error } = useDoc<MediaItem>(docRef);
 
   const updateStatus = async (newStatus: MediaStatus) => {
-    if (!item || !user) return;
-
-    const docRef = doc(firestore, 'users', user.uid, 'library', item.id);
+    if (!item || !user || !docRef) return;
     
     try {
       await updateDoc(docRef, { status: newStatus });
@@ -78,9 +80,8 @@ export default function MediaDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!item || !user) return;
+    if (!item || !user || !docRef) return;
     try {
-       const docRef = doc(firestore, 'users', user.uid, 'library', item.id);
        await deleteDoc(docRef);
 
       toast({

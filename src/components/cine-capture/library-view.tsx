@@ -23,18 +23,26 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useCollection, useFirestore, useUser } from '@/firebase';
-import { collection, writeBatch, getDocs, query } from 'firebase/firestore';
+import { collection, writeBatch, getDocs, query, orderBy } from 'firebase/firestore';
 
 export default function LibraryView() {
   const { user, loading: userLoading } = useUser();
-  const { data: items, loading: itemsLoading } = useCollection<MediaItem>('library', user?.uid);
-  
-  const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
-  const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
-  
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+
+  const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
+
+  const libraryQuery = useMemo(() => {
+    if (!user || !firestore) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'library'),
+      orderBy('addedAt', 'desc')
+    );
+  }, [user, firestore]);
+
+  const { data: items, loading: itemsLoading } = useCollection<MediaItem>(libraryQuery);
 
   const filteredItems = useMemo(() => {
     if (!items) return [];

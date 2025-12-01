@@ -3,12 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import {
-  doc,
   onSnapshot,
-  type Firestore,
+  type DocumentReference,
   type DocumentData,
 } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
 
 interface UseDocReturn<T> {
   data: T | null;
@@ -17,23 +15,20 @@ interface UseDocReturn<T> {
 }
 
 export function useDoc<T extends DocumentData>(
-  docPath: string
+  docRef: DocumentReference<DocumentData> | null
 ): UseDocReturn<T> {
-  const firestore = useFirestore();
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!docPath) {
+    if (!docRef) {
       setLoading(false);
       setData(null);
       return;
     }
 
     setLoading(true);
-
-    const docRef = doc(firestore, docPath);
 
     const unsubscribe = onSnapshot(
       docRef,
@@ -47,14 +42,14 @@ export function useDoc<T extends DocumentData>(
         setError(null);
       },
       (err) => {
-        console.error(`Error fetching document ${docPath}:`, err);
+        console.error(`Error fetching document ${docRef.path}:`, err);
         setError(err);
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [firestore, docPath]);
+  }, [docRef]);
 
   return { data, loading, error };
 }
