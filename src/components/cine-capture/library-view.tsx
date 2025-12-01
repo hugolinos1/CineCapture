@@ -7,16 +7,6 @@ import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
 import { Film } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 
 const LIBRARY_KEY = 'cine-capture-library';
@@ -26,7 +16,8 @@ export default function LibraryView() {
   const [isMounted, setIsMounted] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
-  
+  const { toast } = useToast();
+
   const loadLibrary = useCallback(() => {
     try {
       const localData = localStorage.getItem(LIBRARY_KEY);

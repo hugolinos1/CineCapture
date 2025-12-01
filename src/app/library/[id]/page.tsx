@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
 const LIBRARY_KEY = 'cine-capture-library';
 
@@ -55,9 +55,12 @@ export default function MediaDetailPage() {
       } catch (error) {
         console.error("Failed to find item in localStorage:", error);
         setItem(null);
+      } finally {
+         setLoading(false);
       }
+    } else {
+       setLoading(false);
     }
-    setLoading(false);
   }, [id]);
 
   const handleDelete = () => {
@@ -68,7 +71,6 @@ export default function MediaDetailPage() {
       const newLibrary = library.filter(i => i.id !== item.id);
       localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
 
-      // Manually dispatch a storage event for other components to react
       window.dispatchEvent(new StorageEvent('storage', {
         key: LIBRARY_KEY,
         newValue: JSON.stringify(newLibrary)
