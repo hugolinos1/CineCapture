@@ -134,31 +134,36 @@ export default function UploadDialog() {
 
   return (
     <>
-      <form action={formAction} ref={formRef} className="hidden">
+      <form action={formAction} ref={formRef} className="space-y-4">
          <input
           type="hidden"
           name="screenshot"
           value={preview ?? ''}
         />
-        <SubmitButton/>
+        {preview ? (
+          <div className="flex justify-center">
+            <SubmitButton />
+          </div>
+        ) : (
+          <div
+            className="flex flex-col items-center justify-center space-y-4 text-center p-8 cursor-pointer"
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <UploadCloud className="w-16 h-16 text-primary" />
+            <h2 className="text-2xl font-bold font-headline">Télécharger une capture d'écran</h2>
+            <p className="text-muted-foreground">Glissez-déposez une image ou cliquez pour sélectionner un fichier.</p>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              accept="image/png, image/jpeg, image/webp"
+            />
+          </div>
+        )}
       </form>
-        <div
-          className="flex flex-col items-center justify-center space-y-4 text-center p-8 cursor-pointer"
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <UploadCloud className="w-16 h-16 text-primary" />
-          <h2 className="text-2xl font-bold font-headline">Télécharger une capture d'écran</h2>
-          <p className="text-muted-foreground">Glissez-déposez une image ou cliquez pour sélectionner un fichier.</p>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            accept="image/png, image/jpeg, image/webp"
-          />
-        </div>
         
       <Dialog open={isResultOpen} onOpenChange={(open) => !open && reset()}>
         <DialogContent className="sm:max-w-[825px] bg-background p-0">
