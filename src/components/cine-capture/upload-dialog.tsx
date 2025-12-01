@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import React, { useState, useRef, useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { UploadCloud, Film, Loader2, Star, Users, FileText, AlertTriangle, X } from 'lucide-react';
 import Image from 'next/image';
 import { processScreenshot } from '@/lib/actions';
@@ -30,7 +30,7 @@ function SubmitButton() {
 
 export default function UploadDialog() {
   const [initialState, setInitialState] = useState<{ data: EnrichedMovieDetails | null; error: string | null; success: boolean; }>({ data: null, error: null, success: false });
-  const [state, formAction] = useFormState(processScreenshot, initialState);
+  const [state, formAction] = useActionState(processScreenshot, initialState);
   
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
