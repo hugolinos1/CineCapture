@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useFormState } from 'react-dom';
 import { UploadCloud, Loader2, Star, Users, FileText, X, Film, Tv, Languages } from 'lucide-react';
 import Image from 'next/image';
 import { processScreenshot } from '@/lib/actions';
@@ -12,14 +13,48 @@ import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
 
+const initialState = {
+  data: null,
+  error: null,
+  success: false,
+};
+
+function SubmitButton() {
+    // Note: useFormStatus is not used here to avoid the experimental warning,
+    // but in a real app it would be used to show a pending state.
+    // For now, we rely on the parent component's isPending state.
+    return (
+        <Button type="submit" className="w-full">
+            Analyser la capture d'écran
+        </Button>
+    );
+}
+
+
 export default function UploadDialog() {
+  const [state, formAction] = useFormState(processScreenshot, initialState);
+
   const [isPending, setIsPending] = useState(false);
-  const [result, setResult] = useState<EnrichedMovieDetails | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isResultOpen, setIsResultOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
   const router = useRouter();
+
+
+  useEffect(() => {
+    setIsPending(false);
+    if (state.success && state.data) {
+      setIsResultOpen(true);
+    } else if (state.error) {
+      toast({
+        variant: 'destructive',
+        title: "L'analyse a échoué",
+        description: state.error,
+      });
+    }
+  }, [state, toast]);
 
   const handleFileSelect = (file: File | null) => {
     if (!file) {
@@ -46,49 +81,27 @@ export default function UploadDialog() {
     e.preventDefault();
     handleFileSelect(e.dataTransfer.files?.[0] || null);
   };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  
+  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!preview) return;
-
     setIsPending(true);
     const formData = new FormData(event.currentTarget);
-
-    try {
-      const response = await processScreenshot(null, formData);
-      if (response.success && response.data) {
-        setResult(response.data);
-        setIsResultOpen(true);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'L\'analyse a échoué',
-          description: response.error || 'Une erreur inconnue est survenue.',
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'L\'analyse a échoué',
-        description: error instanceof Error ? error.message : 'Une erreur inattendue est survenue.',
-      });
-    } finally {
-      setIsPending(false);
-    }
+    formAction(formData);
   };
 
+
   const handleAddToLibrary = () => {
-    if (!result) return;
+    if (!state.data) return;
 
     const newItem: MediaItem = {
-      ...result,
+      ...state.data,
       id: new Date().toISOString(),
       status: 'unwatched', 
-      genres: result.genres || [],
-      posterUrl: result.posterUrl || '',
-      summary: result.summary || '',
-      cast: result.cast || [],
+      genres: state.data.genres || [],
+      posterUrl: state.data.posterUrl || '',
+      summary: state.data.summary || '',
+      cast: state.data.cast || [],
     };
 
     try {
@@ -118,9 +131,9 @@ export default function UploadDialog() {
   const reset = () => {
     setPreview(null);
     setIsResultOpen(false);
-    setResult(null);
     setIsPending(false);
     if(fileInputRef.current) fileInputRef.current.value = '';
+    formRef.current?.reset();
   }
 
   const handleRemovePreview = () => {
@@ -130,7 +143,7 @@ export default function UploadDialog() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-4">
         <input type="hidden" name="screenshot" value={preview ?? ''} />
         {preview ? (
           <div className="space-y-4">
@@ -190,8 +203,8 @@ export default function UploadDialog() {
           <div className="grid md:grid-cols-2">
             <div className="relative h-full min-h-[400px] hidden md:block">
               <Image
-                src={result?.posterUrl || 'https://picsum.photos/seed/movie-placeholder/500/750'}
-                alt={result?.title || 'Affiche de film'}
+                src={state.data?.posterUrl || 'https://picsum.photos/seed/movie-placeholder/500/750'}
+                alt={state.data?.title || 'Affiche de film'}
                 fill
                 className="object-cover rounded-l-lg"
                 data-ai-hint="movie poster"
@@ -200,36 +213,36 @@ export default function UploadDialog() {
             <div className="p-6 flex flex-col">
               <DialogHeader>
                  <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
-                    {result?.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />}
-                    {result?.type === 'movie' ? 'Film' : 'Série'}
+                    {state.data?.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />}
+                    {state.data?.type === 'movie' ? 'Film' : 'Série'}
                   </Badge>
-                <DialogTitle className="text-2xl font-headline mb-2">{result?.title}</DialogTitle>
+                <DialogTitle className="text-2xl font-headline mb-2">{state.data?.title}</DialogTitle>
               </DialogHeader>
               <ScrollArea className="h-[400px] pr-4 flex-grow">
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    {result?.rating && (
+                    {state.data?.rating && (
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                          <span>{result.rating.toFixed(1)}</span>
+                          <span>{state.data.rating.toFixed(1)}</span>
                         </div>
                     )}
                   </div>
 
                   <div className='space-y-2'>
                       <h3 className="font-semibold flex items-center gap-2"><FileText className="w-4 h-4"/> Synopsis</h3>
-                      <p className="text-sm text-muted-foreground">{result?.summary}</p>
+                      <p className="text-sm text-muted-foreground">{state.data?.summary}</p>
                   </div>
 
                   <div className='space-y-2'>
                       <h3 className="font-semibold flex items-center gap-2"><Users className="w-4 h-4"/> Distribution</h3>
-                      <p className="text-sm text-muted-foreground">{result?.cast?.join(', ')}</p>
+                      <p className="text-sm text-muted-foreground">{state.data?.cast?.join(', ')}</p>
                   </div>
-                  {result?.genres && result.genres.length > 0 && (
+                  {state.data?.genres && state.data.genres.length > 0 && (
                     <div className='space-y-2'>
                         <h3 className="font-semibold flex items-center gap-2"><Languages className="w-4 h-4" /> Genres</h3>
                         <div className="flex flex-wrap gap-2">
-                        {result.genres.map(genre => (
+                        {state.data.genres.map(genre => (
                             <Badge key={genre} variant="secondary">{genre}</Badge>
                         ))}
                         </div>
