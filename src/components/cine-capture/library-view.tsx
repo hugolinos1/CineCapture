@@ -103,7 +103,7 @@ export default function LibraryView() {
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Filtres</SidebarGroupLabel>
-              <div className="space-y-4 p-2">
+              <div className="space-y-4 px-2">
                 <div>
                   <h4 className="font-medium text-sm mb-2">Statut</h4>
                   <RadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as MediaStatus | 'all')}>
