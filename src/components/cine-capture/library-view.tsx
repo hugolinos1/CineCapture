@@ -67,7 +67,6 @@ export default function LibraryView() {
       const typeMatch = typeFilter === 'all' || item.type === typeFilter;
       return statusMatch && typeMatch;
     }).sort((a, b) => {
-        // Handle potential invalid date strings if any old data remains
         const dateA = new Date(a.id).getTime();
         const dateB = new Date(b.id).getTime();
         if (isNaN(dateA) || isNaN(dateB)) return 0;
@@ -140,6 +139,10 @@ export default function LibraryView() {
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="series" id="type-series" />
                       <Label htmlFor="type-series">Séries</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="miniseries" id="type-miniseries" />
+                      <Label htmlFor="type-miniseries">Mini-séries</Label>
                     </div>
                   </RadioGroup>
                 </div>

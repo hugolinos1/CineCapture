@@ -32,6 +32,12 @@ const statusInfo = {
   unwatched: { Icon: Clock, label: 'Non vu', color: 'text-gray-400' },
 };
 
+const typeLabels = {
+  movie: 'Film',
+  series: 'Série',
+  miniseries: 'Mini-série',
+};
+
 export default function MediaDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -123,6 +129,8 @@ export default function MediaDetailPage() {
   }
 
   const { Icon: StatusIcon, label: statusLabel, color: statusColor } = statusInfo[item.status];
+  const typeIcon = item.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />;
+  const typeLabel = typeLabels[item.type] || 'Contenu';
 
   return (
     <AppLayout>
@@ -152,8 +160,8 @@ export default function MediaDetailPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
-                        {item.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />}
-                        {item.type === 'movie' ? 'Film' : 'Série'}
+                        {typeIcon}
+                        {typeLabel}
                       </Badge>
                       <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
                     </div>

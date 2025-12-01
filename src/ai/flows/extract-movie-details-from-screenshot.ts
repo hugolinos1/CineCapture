@@ -21,7 +21,7 @@ export type ExtractMovieDetailsInput = z.infer<typeof ExtractMovieDetailsInputSc
 
 const ExtractMovieDetailsOutputSchema = z.object({
   title: z.string().describe('The title of the movie or TV show.'),
-  type: z.enum(['movie', 'series']).describe('The type of content.'),
+  type: z.enum(['movie', 'series', 'miniseries']).describe('The type of content.'),
   summary: z.string().describe('A brief summary of the movie or TV show.'),
 });
 export type ExtractMovieDetailsOutput = z.infer<typeof ExtractMovieDetailsOutputSchema>;
@@ -36,7 +36,7 @@ const prompt = ai.definePrompt({
   name: 'extractMovieDetailsPrompt',
   input: {schema: ExtractMovieDetailsInputSchema},
   output: {schema: ExtractMovieDetailsOutputSchema},
-  prompt: `You are an AI assistant designed to extract movie details from screenshots.\n\n  Analyze the screenshot and extract the following information:\n  - Title: The title of the movie or TV show.\n  - Type: The type of content (movie or series).\n  - Summary: A brief summary of the movie or TV show.\n\n  Here is the screenshot: {{media url=photoDataUri}}\n\n  Return the extracted information in JSON format.`,
+  prompt: `You are an AI assistant designed to extract movie details from screenshots.\n\n  Analyze the screenshot and extract the following information:\n  - Title: The title of the movie or TV show.\n  - Type: The type of content (movie, series, or miniseries). Distinguish clearly between a multi-season series and a single-season miniseries.\n  - Summary: A brief summary of the movie or TV show.\n\n  Here is the screenshot: {{media url=photoDataUri}}\n\n  Return the extracted information in JSON format.`,
 });
 
 const extractMovieDetailsFromScreenshotFlow = ai.defineFlow(

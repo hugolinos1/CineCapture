@@ -2,7 +2,7 @@ import type { EnrichExtractedMovieDetailsOutput } from "@/ai/flows/enrich-extrac
 
 export type MediaStatus = 'watched' | 'in-progress' | 'unwatched';
 
-export type MediaType = 'movie' | 'series';
+export type MediaType = 'movie' | 'series' | 'miniseries';
 
 export interface MediaItem {
   id: string;

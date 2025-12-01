@@ -104,6 +104,11 @@ export default function SearchForm() {
   }
 
   const result = state.data;
+  const typeLabels = {
+    movie: 'Film',
+    series: 'Série',
+    miniseries: 'Mini-série',
+  };
 
   return (
     <>
@@ -116,7 +121,7 @@ export default function SearchForm() {
             <Label htmlFor='title'>Titre du film ou de la série</Label>
             <Input id="title" name="title" placeholder="Ex: Inception" required/>
         </div>
-        <RadioGroup name="type" defaultValue="movie" className="flex space-x-4">
+        <RadioGroup name="type" defaultValue="movie" className="flex flex-wrap gap-x-4 gap-y-2">
             <div className="flex items-center space-x-2">
                 <RadioGroupItem value="movie" id="type-movie" />
                 <Label htmlFor="type-movie">Film</Label>
@@ -124,6 +129,10 @@ export default function SearchForm() {
             <div className="flex items-center space-x-2">
                 <RadioGroupItem value="series" id="type-series" />
                 <Label htmlFor="type-series">Série</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+                <RadioGroupItem value="miniseries" id="type-miniseries" />
+                <Label htmlFor="type-miniseries">Mini-série</Label>
             </div>
         </RadioGroup>
         <Button 
@@ -156,8 +165,8 @@ export default function SearchForm() {
                 </div>
                 <div className="p-6 space-y-4">
                   <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
-                    {result.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />}
-                    {result.type === 'movie' ? 'Film' : 'Série'}
+                    <Tv className="mr-2 h-4 w-4" />
+                    {typeLabels[result.type] || 'Contenu'}
                   </Badge>
                   <h2 className="text-3xl font-bold font-headline text-primary-foreground">{result.title}</h2>
                   
