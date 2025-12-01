@@ -22,12 +22,12 @@ export type EnrichExtractedMovieDetailsInput = z.infer<
 >;
 
 const EnrichExtractedMovieDetailsOutputSchema = z.object({
-  title: z.string().describe('The title of the movie or series.'),
-  type: z.string().describe('The type of content (movie or series).'),
-  summary: z.string().describe('A detailed synopsis of the content.'),
-  posterUrl: z.string().describe('URL of the movie poster.'),
-  cast: z.array(z.string()).describe('List of main cast members.'),
-  rating: z.number().optional().describe('The movie rating, if available.'),
+  title: z.string().describe('Le titre du film ou de la série.'),
+  type: z.string().describe('Le type de contenu (film ou série).'),
+  summary: z.string().describe('Un synopsis détaillé du contenu.'),
+  posterUrl: z.string().describe('URL de l\'affiche du film.'),
+  cast: z.array(z.string()).describe('Liste des principaux acteurs.'),
+  rating: z.number().optional().describe('La note du film, si disponible.'),
 });
 
 export type EnrichExtractedMovieDetailsOutput = z.infer<
@@ -44,15 +44,16 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   name: 'enrichExtractedMovieDetailsPrompt',
   input: {schema: EnrichExtractedMovieDetailsInputSchema},
   output: {schema: EnrichExtractedMovieDetailsOutputSchema},
-  prompt: `You are an AI assistant specialized in enriching movie and series details.
-  Given the following extracted information, fetch additional details such as a detailed synopsis,
-  the movie poster URL, and the main cast members. If available, also include the rating.
+  prompt: `Vous êtes un assistant IA spécialisé dans l'enrichissement des détails de films et de séries.
+  Toutes les réponses textuelles que vous fournissez doivent être en français.
+  À partir des informations extraites suivantes, récupérez des détails supplémentaires tels qu'un synopsis détaillé,
+  l'URL de l'affiche du film et les principaux acteurs. Si disponible, incluez également la note.
 
-  Title: {{{title}}}
+  Titre: {{{title}}}
   Type: {{{type}}}
-  Summary: {{{summary}}}
+  Résumé: {{{summary}}}
 
-  Provide the output in JSON format.
+  Fournissez la sortie au format JSON.
   `,
 });
 
