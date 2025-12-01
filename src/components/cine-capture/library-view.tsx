@@ -8,7 +8,98 @@ import { Film } from 'lucide-react';
 import { Button } from '../ui/button';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
-import { mockLibrary } from '@/lib/mock-data';
+
+const initialLibrary: MediaItem[] = [
+  {
+    id: '1',
+    title: 'Cosmic Echoes',
+    type: 'movie',
+    summary: 'A lone astronaut discovers a mysterious signal from a distant galaxy, leading her on a perilous journey to uncover the origins of the universe.',
+    posterUrl: 'https://images.unsplash.com/photo-1611419010196-a360856fc42f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtb3ZpZSUyMHBvc3RlcnxlbnwwfHx8fDE3NjQ1MTYxNDh8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    cast: ['Aria Vance', 'Leo Cruz', 'Dr. Aris Thorne'],
+    rating: 8.5,
+    status: 'unwatched',
+    genres: ['Science Fiction', 'Thriller'],
+  },
+  {
+    id: '2',
+    title: 'The Last Painter',
+    type: 'movie',
+    summary: 'In a world devoid of color, an elderly artist holds the last pigments. He must decide whether to share his gift or protect it from a monochrome society.',
+    posterUrl: 'https://images.unsplash.com/photo-1641549058491-8a3442385da0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bW92aWUlMjBwb3N0ZXJ8ZW58MHx8fHwxNzY0NTE2MTQ4fDA&ixlib=rb-4.1.0&q=80&w=1080',
+    cast: ['Elias Thorne', 'Clara Belle', 'Marcus Grey'],
+    rating: 9.1,
+    status: 'watched',
+    genres: ['Drama', 'Fantasy'],
+  },
+  {
+    id: '3',
+    title: 'Zero Protocol',
+    type: 'movie',
+    summary: 'A rogue agent is activated to stop a cyber-terrorist group from unleashing a digital plague that could collapse the global economy.',
+    posterUrl: 'https://images.unsplash.com/photo-1590179068383-b9c69aacebd3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtb3ZpZSUyMHBvc3RlcnxlbnwwfHx8fDE3NjQ1MTYxNDh8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    cast: ['Jax Ryder', 'Zara Khan', 'General Stone'],
+    rating: 7.8,
+    status: 'in-progress',
+    genres: ['Action', 'Thriller'],
+  },
+  {
+    id: '4',
+    title: 'The Pineapple Incident',
+    type: 'movie',
+    summary: 'Two bumbling detectives accidentally get entangled with a crime syndicate after a mix-up involving a pineapple and a briefcase full of cash.',
+    posterUrl: 'https://images.unsplash.com/photo-1616530940355-351fabd9524b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtb3ZpZSUyMHBvc3RlcnxlbnwwfHx8fDE3NjQ1MTYxNDh8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    cast: ['Milo Fitz', 'Penny Lane', 'Don "The Juice" Mango'],
+    rating: 7.2,
+    status: 'unwatched',
+    genres: ['Comedy', 'Crime'],
+  },
+  {
+    id: '5',
+    title: 'Aethelgard',
+    type: 'series',
+    summary: 'A historical epic chronicling the rise of a young shieldmaiden who unites warring clans to defend their homeland from a formidable invading empire.',
+    posterUrl: 'https://images.unsplash.com/photo-1696787717706-d9d9fc9313fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzZXJpZXMlMjBwb3N0ZXJ8ZW58MHx8fHwxNzY0NTgzMDQ2fDA&ixlib=rb-4.1.0&q=80&w=1080',
+    cast: ['Freya Ironside', 'Bjorn Lothar', 'King Alaric'],
+    rating: 8.9,
+    status: 'watched',
+    genres: ['History', 'Drama', 'Action'],
+  },
+  {
+    id: '6',
+    title: 'The Crystal Key',
+    type: 'series',
+    summary: 'In a realm powered by magic, a group of young mages must find the legendary Crystal Key to restore balance before their world is consumed by shadow creatures.',
+    posterUrl: 'https://images.unsplash.com/photo-1517186958245-5b1e715f4597?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzZXJpZXMlMjBwb3N0ZXJ8ZW58MHx8fHwxNzY0NTgzMDQ2fDA&ixlib=rb-4.1.0&q=80&w=1080',
+    cast: ['Lyra Meadowlight', 'Kaelen Shadowhand', 'Elara the Wise'],
+    rating: 8.2,
+    status: 'in-progress',
+    genres: ['Fantasy', 'Adventure'],
+  },
+  {
+    id: '7',
+    title: 'Orion\'s Belt',
+    type: 'series',
+    summary: 'The crew of the starship Orion navigates the treacherous outer belt, smuggling goods and dodging the authoritarian Galactic Federation.',
+    posterUrl: 'https://images.unsplash.com/photo-1517186958245-5b1e715f4597?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzZXJpZXMlMjBwb3N0ZXJ8ZW58MHx8fHwxNzY0NTgzMDQ2fDA&ixlib-rb-4.1.0&q=80&w=1080',
+    cast: ['Captain Eva Rostova', 'Jax "The Fixer" Smith', 'Nova'],
+    rating: 8.7,
+    status: 'unwatched',
+    genres: ['Science Fiction', 'Adventure'],
+  },
+  {
+    id: '8',
+    title: 'Wild Frontiers',
+    type: 'movie',
+    summary: 'A breathtaking documentary exploring the most remote and untouched ecosystems on Earth, revealing the secret lives of its unique inhabitants.',
+    posterUrl: 'https://images.unsplash.com/photo-1634845077820-eb1702e94d80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkb2N1bWVudGFyeSUyMHBvc3RlcnxlbnwwfHx8fDE3NjQ1ODMwNDZ8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    cast: ['Narrated by David Attenborough'],
+    rating: 9.5,
+    status: 'watched',
+    genres: ['Documentary', 'Nature'],
+  },
+];
+
 
 export default function LibraryView() {
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -19,29 +110,28 @@ export default function LibraryView() {
   const loadLibrary = () => {
     try {
       const localData = localStorage.getItem('cine-capture-library');
-      const localItems: MediaItem[] = localData ? JSON.parse(localData) : [];
-      
-      // Combine mock data with local data, giving priority to local items
-      const itemMap = new Map<string, MediaItem>();
-      mockLibrary.forEach(item => itemMap.set(item.id, item));
-      localItems.forEach(item => itemMap.set(item.id, item));
-      
-      setItems(Array.from(itemMap.values()));
+      if (localData) {
+        setItems(JSON.parse(localData));
+      } else {
+        // If no local data, initialize with mock data
+        localStorage.setItem('cine-capture-library', JSON.stringify(initialLibrary));
+        setItems(initialLibrary);
+      }
     } catch (error) {
       console.error("Failed to load library from localStorage:", error);
-      setItems(mockLibrary);
+      setItems(initialLibrary); // Fallback to initial data on error
     }
   };
 
   useEffect(() => {
-    setIsMounted(true); // Component has mounted, safe to access localStorage
+    setIsMounted(true); 
     loadLibrary();
 
-    // Listen for custom event to reload library when an item is added
-    window.addEventListener('storage', loadLibrary);
+    const handleStorageChange = () => loadLibrary();
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      window.removeEventListener('storage', loadLibrary);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
@@ -50,11 +140,10 @@ export default function LibraryView() {
       const statusMatch = statusFilter === 'all' || item.status === statusFilter;
       const typeMatch = typeFilter === 'all' || item.type === typeFilter;
       return statusMatch && typeMatch;
-    });
+    }).sort((a, b) => a.title.localeCompare(b.title));
   }, [items, statusFilter, typeFilter]);
 
   if (!isMounted) {
-    // You can return a loader here if you want
     return null; 
   }
 

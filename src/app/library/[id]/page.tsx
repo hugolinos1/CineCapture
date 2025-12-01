@@ -11,7 +11,6 @@ import AppLayout from '@/components/layout/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { mockLibrary } from '@/lib/mock-data';
 import type { MediaItem } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -29,24 +28,19 @@ export default function MediaDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Ensure this runs only on the client where localStorage is available
     if (typeof window !== 'undefined' && id) {
       try {
         const localData = localStorage.getItem('cine-capture-library');
-        const localItems: MediaItem[] = localData ? JSON.parse(localData) : [];
-        
-        // Correctly merge and deduplicate, giving priority to local items
-        const itemMap = new Map<string, MediaItem>();
-        mockLibrary.forEach(item => itemMap.set(item.id, item));
-        localItems.forEach(item => itemMap.set(item.id, item));
-        const allItems = Array.from(itemMap.values());
-
-        const foundItem = allItems.find((i: MediaItem) => i.id === id);
-
-        if (foundItem) {
-          setItem(foundItem);
+        if (localData) {
+          const allItems: MediaItem[] = JSON.parse(localData);
+          const foundItem = allItems.find((i) => i.id === id);
+          if (foundItem) {
+            setItem(foundItem);
+          } else {
+            setError("L'élément demandé n'a pas été trouvé dans votre bibliothèque.");
+          }
         } else {
-          setError("L'élément demandé n'a pas été trouvé dans votre bibliothèque.");
+           setError("Votre bibliothèque est vide. Impossible de trouver l'élément.");
         }
       } catch (e) {
         console.error("Erreur lors du chargement de l'élément de la bibliothèque:", e);
