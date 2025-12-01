@@ -26,9 +26,7 @@ export default function LibraryView() {
   const [isMounted, setIsMounted] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
-  const [itemToDelete, setItemToDelete] = useState<MediaItem | null>(null);
-  const { toast } = useToast();
-
+  
   const loadLibrary = useCallback(() => {
     try {
       const localData = localStorage.getItem(LIBRARY_KEY);
@@ -57,26 +55,6 @@ export default function LibraryView() {
     };
   }, [loadLibrary]);
 
-  const handleDeleteRequest = (item: MediaItem) => {
-    setItemToDelete(item);
-  };
-
-  const confirmDelete = () => {
-    if (!itemToDelete) return;
-    
-    const newItems = items.filter(item => item.id !== itemToDelete.id);
-    setItems(newItems);
-    localStorage.setItem(LIBRARY_KEY, JSON.stringify(newItems));
-
-    toast({
-      title: 'Élément supprimé',
-      description: `"${itemToDelete.title}" a été supprimé de votre bibliothèque.`,
-    });
-    
-    setItemToDelete(null); 
-  };
-
-
   const filteredItems = useMemo(() => {
     return items.filter(item => {
       const statusMatch = statusFilter === 'all' || item.status === statusFilter;
@@ -90,7 +68,6 @@ export default function LibraryView() {
   }
 
   return (
-    <>
     <SidebarProvider>
       <div className="flex flex-1">
         <Sidebar collapsible="icon">
@@ -147,7 +124,7 @@ export default function LibraryView() {
           {filteredItems.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
               {filteredItems.map(item => (
-                <MovieCard key={item.id} item={item} onDeleteRequest={handleDeleteRequest} />
+                <MovieCard key={item.id} item={item} />
               ))}
             </div>
           ) : (
@@ -160,21 +137,5 @@ export default function LibraryView() {
         </main>
       </div>
     </SidebarProvider>
-
-    <AlertDialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Cela supprimera définitivement "{itemToDelete?.title}" de votre bibliothèque.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setItemToDelete(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>Supprimer</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
   );
 }
