@@ -57,7 +57,13 @@ const nextConfig: NextConfig = {
         hostname: 'artworks.thetvdb.com',
         port: '',
         pathname: '/**',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.impawards.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

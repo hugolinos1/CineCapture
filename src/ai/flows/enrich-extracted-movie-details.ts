@@ -49,7 +49,7 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   Vous devez obligatoirement trouver les informations suivantes sur le web et les retourner en français:
   
   1.  **Synopsis détaillé**: Développez le résumé fourni.
-  2.  **URL de l'affiche (posterUrl)**: Trouvez une URL publique et valide pour une affiche de haute qualité. C'est une étape cruciale.
+  2.  **URL de l'affiche (posterUrl)**: C'est une étape cruciale. Trouvez une URL publique et valide pour une affiche de haute qualité. Privilégiez une recherche sur le site www.impawards.com pour trouver l'affiche.
   3.  **Distribution (cast)**: Listez les acteurs principaux.
   4.  **Genres**: Listez les genres associés.
   5.  **Note (rating)**: Si disponible, fournissez la note (sur 10).
