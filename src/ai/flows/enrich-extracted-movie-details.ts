@@ -45,17 +45,21 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   name: 'enrichExtractedMovieDetailsPrompt',
   input: {schema: EnrichExtractedMovieDetailsInputSchema},
   output: {schema: EnrichExtractedMovieDetailsOutputSchema},
-  prompt: `Vous êtes un assistant IA spécialisé dans l'enrichissement des détails de films et de séries.
-  Toutes les réponses textuelles que vous fournissez doivent être en français.
-  À partir des informations extraites suivantes, récupérez des détails supplémentaires tels qu'un synopsis détaillé,
-  l'URL de l'affiche du film, les principaux acteurs et les genres. Si disponible, incluez également la note.
+  prompt: `Vous êtes un assistant IA expert en cinéma et séries. Votre mission est d'enrichir les informations de base fournies pour un film ou une série.
+  Vous devez obligatoirement trouver les informations suivantes sur le web et les retourner en français:
+  
+  1.  **Synopsis détaillé**: Développez le résumé fourni.
+  2.  **URL de l'affiche (posterUrl)**: Trouvez une URL publique et valide pour une affiche de haute qualité. C'est une étape cruciale.
+  3.  **Distribution (cast)**: Listez les acteurs principaux.
+  4.  **Genres**: Listez les genres associés.
+  5.  **Note (rating)**: Si disponible, fournissez la note (sur 10).
 
+  Informations de base:
   Titre: {{{title}}}
   Type: {{{type}}}
-  Résumé: {{{summary}}}
+  Résumé initial: {{{summary}}}
 
-  Fournissez la sortie au format JSON. L'URL de l'affiche doit être une URL d'image valide et accessible au public.
-  `,
+  Fournissez la sortie au format JSON en respectant le schéma demandé. L'URL de l'affiche est la plus importante.`,
 });
 
 const enrichExtractedMovieDetailsFlow = ai.defineFlow(
