@@ -1,11 +1,11 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { Film, Trash2, PlusCircle, LogIn } from 'lucide-react';
+import { Film, Trash2, PlusCircle, LogIn, Loader2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarProvider } from '../ui/sidebar';
@@ -22,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { useAuth, useCollection, useFirestore, useUser } from '@/firebase';
+import { useCollection, useFirestore, useUser } from '@/firebase';
 import { collection, writeBatch, getDocs, query, orderBy } from 'firebase/firestore';
 
 export default function LibraryView() {
@@ -54,7 +54,7 @@ export default function LibraryView() {
   }, [items, statusFilter, typeFilter]);
 
   const handleClearLibrary = async () => {
-    if (!user) return;
+    if (!user || !firestore) return;
     try {
       const libraryRef = collection(firestore, 'users', user.uid, 'library');
       const q = query(libraryRef);
@@ -85,8 +85,11 @@ export default function LibraryView() {
 
   if (isLoading) {
       return (
-          <div className="flex-1 p-8 text-center">
-              <p>Chargement de votre bibliothèque...</p>
+          <div className="flex-1 p-8 flex justify-center items-center">
+              <div className='flex flex-col items-center gap-4 text-muted-foreground'>
+                <Loader2 className="w-12 h-12 animate-spin" />
+                <p className="text-lg">Chargement de votre bibliothèque...</p>
+              </div>
           </div>
       )
   }
