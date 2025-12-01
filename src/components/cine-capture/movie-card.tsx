@@ -26,8 +26,8 @@ export default function MovieCard({ item, onDeleteRequest }: MovieCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden group relative aspect-[2/3] border-0 shadow-lg h-full cursor-pointer">
-      <Link href={`/library/${item.id}`} passHref className="absolute inset-0 z-0">
+    <Card className="overflow-hidden group relative aspect-[2/3] border-0 shadow-lg h-full">
+      <Link href={`/library/${item.id}`} passHref className="absolute inset-0 z-0 cursor-pointer">
         <CardContent className="p-0 h-full">
           <Image
             src={item.posterUrl}
