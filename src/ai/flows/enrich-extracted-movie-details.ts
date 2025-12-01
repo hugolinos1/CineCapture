@@ -93,6 +93,16 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   Retournez toutes les informations au format JSON.`,
 });
 
+async function verifyImageUrl(url: string): Promise<boolean> {
+  if (!url) return false;
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok && response.headers.get('content-type')?.startsWith('image/');
+  } catch {
+    return false;
+  }
+}
+
 const enrichExtractedMovieDetailsFlow = ai.defineFlow(
   {
     name: 'enrichExtractedMovieDetailsFlow',
@@ -104,11 +114,9 @@ const enrichExtractedMovieDetailsFlow = ai.defineFlow(
     
     // Validation post-traitement de l'URL de l'affiche
     if (output?.posterUrl) {
-      const isValidImageUrl = /\.(jpg|jpeg|png|webp)$/i.test(output.posterUrl);
-      const isValidProtocol = output.posterUrl.startsWith('http://') || output.posterUrl.startsWith('https://');
-      
-      if (!isValidImageUrl || !isValidProtocol) {
-        console.warn(`Invalid poster URL detected: ${output.posterUrl}`);
+      const isUrlValid = await verifyImageUrl(output.posterUrl);
+      if (!isUrlValid) {
+        console.warn(`Invalid or inaccessible poster URL detected: ${output.posterUrl}`);
         output.posterUrl = ''; // Réinitialiser si l'URL n'est pas valide
       }
     }
