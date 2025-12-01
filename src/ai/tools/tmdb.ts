@@ -17,12 +17,13 @@ const TmdbSearchOutputSchema = z.object({
   title: z.string().optional(),
   posterUrl: z.string().optional(),
   source: z.string().optional(),
+  rating: z.number().optional(),
 });
 
 export const findMediaOnTmdb = ai.defineTool(
   {
     name: 'findMediaOnTmdb',
-    description: 'Finds a movie or TV series on The Movie Database (TMDB) and returns its details, including a poster URL.',
+    description: 'Finds a movie or TV series on The Movie Database (TMDB) and returns its details, including a poster URL and rating.',
     inputSchema: TmdbSearchInputSchema,
     outputSchema: TmdbSearchOutputSchema,
   },
@@ -33,14 +34,13 @@ export const findMediaOnTmdb = ai.defineTool(
     }
 
     const typeToQuery = input.type === 'movie' ? 'movie' : 'tv';
-    const url = `https://api.themoviedb.org/3/search/${typeToQuery}?query=${encodeURIComponent(input.title)}&language=fr-FR&page=1`;
+    const url = `https://api.themoviedb.org/3/search/${typeToQuery}?query=${encodeURIComponent(input.title)}&language=fr-FR&page=1&api_key=${TMDB_API_KEY}`;
 
     try {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${TMDB_API_KEY}`,
         },
       });
 
@@ -58,6 +58,7 @@ export const findMediaOnTmdb = ai.defineTool(
         return {
           title: bestMatch.title || bestMatch.name,
           posterUrl: posterPath ? `https://image.tmdb.org/t/p/w780${posterPath}` : '',
+          rating: bestMatch.vote_average,
           source: 'TMDB API',
         };
       } else {

@@ -45,7 +45,7 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   tools: [findMediaOnTmdb],
   input: {schema: EnrichExtractedMovieDetailsInputSchema},
   output: {schema: EnrichExtractedMovieDetailsOutputSchema},
-  prompt: `Vous êtes un assistant IA expert en cinéma et séries. Votre mission est d'enrichir les informations fournies pour un film ou une série. Toutes les informations textuelles (synopsis, genres) DOIVENT être en français.
+  prompt: `Vous êtes un assistant IA expert en cinéma et séries. Votre mission est d'enrichir les informations fournies pour un film ou une série. Toutes les informations textuelles (synopsis, genres, distribution) DOIVENT être en français.
 
   Informations de base:
   Titre: {{{title}}}
@@ -53,18 +53,17 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   Résumé initial: {{{summary}}}
   
   Marche à suivre:
-  1.  Utilisez l'outil 'findMediaOnTmdb' fourni pour obtenir les informations structurées, y compris l'URL de l'affiche.
+  1.  Utilisez l'outil 'findMediaOnTmdb' fourni pour obtenir les informations structurées, y compris l'URL de l'affiche et la note.
   2.  À partir des informations de l'outil et de vos connaissances, générez les informations complémentaires suivantes :
       - Un synopsis détaillé et engageant en français.
       - La distribution principale (5-10 acteurs principaux).
       - La liste complète des genres, en français.
-      - La note sur 10.
   3.  Assurez-vous que le titre et le type correspondent à l'entrée.
-  4.  Renseignez le champ 'source' avec la valeur retournée par l'outil.
+  4.  Renseignez le champ 'source', 'posterUrl' et 'rating' avec les valeurs retournées par l'outil.
   
   RÈGLES CRITIQUES:
-  - L'URL de l'affiche ('posterUrl') DOIT provenir exclusivement du résultat de l'outil 'findMediaOnTmdb'. Ne l'inventez jamais et ne la cherchez pas ailleurs.
-  - Si l'outil ne retourne pas d'URL pour l'affiche, retournez une chaîne vide "".
+  - Les champs 'posterUrl' et 'rating' DOIVENT provenir exclusivement du résultat de l'outil 'findMediaOnTmdb'. Ne les inventez jamais.
+  - Si l'outil ne retourne pas de valeur pour ces champs, laissez-les vides.
 
   Retournez toutes les informations au format JSON.`,
 });
