@@ -4,13 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import type { MediaItem } from '@/lib/types';
+import type { MediaItem, MediaStatus } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -23,16 +23,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const LIBRARY_KEY = 'cine-capture-library';
 
-const statusInfo = {
+const statusInfo: Record<MediaStatus, { Icon: React.ElementType; label: string; color: string; }> = {
   watched: { Icon: CheckCircle, label: 'Vu', color: 'text-green-400' },
   'in-progress': { Icon: PlayCircle, label: 'En cours', color: 'text-blue-400' },
   unwatched: { Icon: Clock, label: 'Non vu', color: 'text-gray-400' },
 };
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
   movie: 'Film',
   series: 'Série',
   miniseries: 'Mini-série',
@@ -57,7 +63,7 @@ export default function MediaDetailPage() {
           const foundItem = library.find(i => i.id === id);
           setItem(foundItem || null);
         } else {
-          setItem(null); // No library data found
+          setItem(null);
         }
       } catch (error) {
         console.error("Failed to find item in localStorage:", error);
@@ -70,6 +76,39 @@ export default function MediaDetailPage() {
     }
   }, [id]);
 
+  const updateStatus = (newStatus: MediaStatus) => {
+    if (!item) return;
+
+    const updatedItem = { ...item, status: newStatus };
+    setItem(updatedItem);
+
+    try {
+      const localData = localStorage.getItem(LIBRARY_KEY);
+      const library: MediaItem[] = localData ? JSON.parse(localData) : [];
+      const newLibrary = library.map(i => (i.id === id ? updatedItem : i));
+      localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
+
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: LIBRARY_KEY,
+        newValue: JSON.stringify(newLibrary)
+      }));
+
+      toast({
+        title: 'Statut mis à jour',
+        description: `Le statut de "${item.title}" est maintenant "${statusInfo[newStatus].label}".`,
+      });
+    } catch (e) {
+      console.error("Erreur lors de la mise à jour du statut:", e);
+      toast({
+        variant: "destructive",
+        title: 'Erreur',
+        description: "Une erreur s'est produite lors de la mise à jour."
+      });
+      // Revert UI change on error
+      setItem(item);
+    }
+  };
+
   const handleDelete = () => {
     if (!item) return;
     try {
@@ -78,7 +117,6 @@ export default function MediaDetailPage() {
       const newLibrary = library.filter(i => i.id !== item.id);
       localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
 
-      // This event is for other tabs/windows to update
       window.dispatchEvent(new StorageEvent('storage', {
         key: LIBRARY_KEY,
         newValue: JSON.stringify(newLibrary)
@@ -121,7 +159,7 @@ export default function MediaDetailPage() {
            </div>
            <Alert variant="destructive">
             <AlertTitle>Erreur</AlertTitle>
-            <AlertDescription>{"L'élément demandé n'a pas été trouvé dans votre bibliothèque."}</AlertDescription>
+            <AlertDescription>{"L'élément demandé n'a pas été trouvé dans votre bibliothèque. Avez-vous vidé le cache ou créé cet élément sur un autre appareil ?"}</AlertDescription>
            </Alert>
         </main>
       </AppLayout>
@@ -147,7 +185,7 @@ export default function MediaDetailPage() {
           <div className="grid md:grid-cols-3">
             <div className="md:col-span-1 relative min-h-[450px] md:min-h-0">
               <Image
-                src={item.posterUrl}
+                src={item.posterUrl || 'https://picsum.photos/seed/placeholder/500/750'}
                 alt={`Affiche de ${item.title}`}
                 fill
                 className="object-cover"
@@ -188,7 +226,7 @@ export default function MediaDetailPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
                   {item.rating && (
                     <div className="flex items-center gap-1">
                       <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
@@ -196,10 +234,26 @@ export default function MediaDetailPage() {
                       <span className="text-xs">/ 10</span>
                     </div>
                   )}
-                   <div className={`flex items-center gap-2 ${statusColor}`}>
-                      <StatusIcon className="h-5 w-5" />
-                      <span className="font-semibold text-white">{statusLabel}</span>
-                    </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className={`w-[150px] justify-start ${statusColor}`}>
+                        <StatusIcon className="mr-2 h-4 w-4" />
+                        <span className="truncate">{statusLabel}</span>
+                        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-[150px]">
+                      {(Object.keys(statusInfo) as MediaStatus[]).map(status => {
+                        const { Icon: MenuIcon, label: menuLabel } = statusInfo[status];
+                        return (
+                          <DropdownMenuItem key={status} onSelect={() => updateStatus(status)}>
+                            <MenuIcon className="mr-2 h-4 w-4" />
+                            <span>{menuLabel}</span>
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 <div className='space-y-2'>

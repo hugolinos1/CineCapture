@@ -43,7 +43,7 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   name: 'enrichExtractedMovieDetailsPrompt',
   input: {schema: EnrichExtractedMovieDetailsInputSchema},
   output: {schema: EnrichExtractedMovieDetailsOutputSchema},
-  prompt: `Vous êtes un assistant IA expert en cinéma et séries. Votre mission est d'enrichir les informations de base fournies pour un film ou une série en utilisant PLUSIEURS sources de données.
+  prompt: `Vous êtes un assistant IA expert en cinéma et séries. Votre mission est d'enrichir les informations de base fournies pour un film ou une série en utilisant PLUSIEURS sources de données. Toutes les informations textuelles (synopsis, genres) DOIVENT être en français.
 
   Informations de base:
   Titre: {{{title}}}
@@ -86,7 +86,7 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   INFORMATIONS COMPLÉMENTAIRES:
   - Synopsis détaillé en français
   - Distribution principale (5-10 acteurs principaux)
-  - Genres (liste complète)
+  - Genres (liste complète, en français)
   - Note (sur 10, convertissez si nécessaire)
   - Indiquez dans le champ "source" quelle base de données a été utilisée
   
