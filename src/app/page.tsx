@@ -1,6 +1,9 @@
 import AppLayout from '@/components/layout/app-layout';
 import UploadDialog from '@/components/cine-capture/upload-dialog';
 import { Card, CardContent } from '@/components/ui/card';
+import SearchForm from '@/components/cine-capture/search-form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UploadCloud, Search } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -17,12 +20,31 @@ export default function Home() {
                   Ne perdez plus jamais une recommandation de film.
                 </h1>
                 <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                  Fatigué du désordre des captures d'écran ? CineCapture analyse vos captures, extrait les détails des films et construit automatiquement votre liste personnelle.
+                  CineCapture analyse vos captures d'écran ou vos recherches textuelles, extrait les détails et construit automatiquement votre liste personnelle.
                 </p>
               </div>
-              <Card className="w-full max-w-md border-2 border-dashed border-primary/50 bg-transparent shadow-lg hover:border-primary transition-colors duration-300">
-                <CardContent className="p-6">
-                   <UploadDialog />
+              <Card className="w-full max-w-md bg-transparent shadow-lg">
+                <CardContent className="p-0">
+                  <Tabs defaultValue="screenshot" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="screenshot"><UploadCloud className='mr-2'/> Capture d'écran</TabsTrigger>
+                      <TabsTrigger value="text"><Search className='mr-2'/> Recherche</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="screenshot">
+                       <Card className="border-0 border-t rounded-t-none bg-card">
+                         <CardContent className="p-6">
+                           <UploadDialog />
+                         </CardContent>
+                       </Card>
+                    </TabsContent>
+                    <TabsContent value="text">
+                       <Card className="border-0 border-t rounded-t-none bg-card">
+                         <CardContent className="p-6">
+                            <SearchForm />
+                         </CardContent>
+                       </Card>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </div>

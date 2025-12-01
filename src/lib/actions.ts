@@ -41,3 +41,33 @@ export async function processScreenshot(
     return { data: null, error: `L'analyse a échoué: ${errorMessage}`, success: false };
   }
 }
+
+
+export async function processTextSearch(
+  prevState: any,
+  formData: FormData,
+): Promise<{ data: EnrichedMovieDetails | null; error: string | null; success: boolean }> {
+  const title = formData.get('title') as string | null;
+  const type = formData.get('type') as 'movie' | 'series' | null;
+
+  if (!title || !type) {
+    return { data: null, error: 'Le titre et le type sont requis.', success: false };
+  }
+
+  try {
+    const enrichedDetails = await enrichExtractedMovieDetails({
+      title,
+      type,
+    });
+
+    if (!enrichedDetails || !enrichedDetails.title) {
+        throw new Error("Impossible de trouver les détails pour ce titre.");
+    }
+
+    return { data: enrichedDetails, error: null, success: true };
+  } catch (error) {
+    console.error('Erreur lors de la recherche textuelle:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue.';
+    return { data: null, error: `La recherche a échoué: ${errorMessage}`, success: false };
+  }
+}
