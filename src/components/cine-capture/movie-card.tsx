@@ -16,7 +16,7 @@ export default function MovieCard({ item }: { item: MediaItem }) {
       <CardContent className="p-0">
         <Image
           src={item.posterUrl}
-          alt={`Poster for ${item.title}`}
+          alt={`Affiche pour ${item.title}`}
           width={500}
           height={750}
           className="object-cover w-full h-full transition-transform duration-300 ease-in-out group-hover:scale-105"

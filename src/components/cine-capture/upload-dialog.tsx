@@ -19,10 +19,10 @@ function SubmitButton() {
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Analyzing...
+          Analyse en cours...
         </>
       ) : (
-        'Analyze Screenshot'
+        'Analyser la capture d\'écran'
       )}
     </Button>
   );
@@ -44,7 +44,7 @@ export default function UploadDialog() {
     } else if (state.error) {
       toast({
         variant: 'destructive',
-        title: 'Analysis Failed',
+        title: 'L\'analyse a échoué',
         description: state.error,
       });
       // Reset preview on error to allow re-submission of the same file
@@ -86,8 +86,8 @@ export default function UploadDialog() {
 
   const handleAddToLibrary = () => {
     toast({
-      title: 'Added to Library!',
-      description: `${state.data?.title} has been added to your personal library.`,
+      title: 'Ajouté à la bibliothèque !',
+      description: `${state.data?.title} a été ajouté à votre bibliothèque personnelle.`,
     });
     reset();
   };
@@ -117,8 +117,8 @@ export default function UploadDialog() {
           onClick={() => fileInputRef.current?.click()}
         >
           <UploadCloud className="w-16 h-16 text-primary" />
-          <h2 className="text-2xl font-bold font-headline">Upload a Screenshot</h2>
-          <p className="text-muted-foreground">Drag & drop an image or click to select a file.</p>
+          <h2 className="text-2xl font-bold font-headline">Télécharger une capture d'écran</h2>
+          <p className="text-muted-foreground">Glissez-déposez une image ou cliquez pour sélectionner un fichier.</p>
           <input
             type="file"
             ref={fileInputRef}
@@ -134,7 +134,7 @@ export default function UploadDialog() {
             <div className="relative h-full min-h-[400px] hidden md:block">
               <Image
                 src={state.data?.posterUrl || 'https://picsum.photos/seed/placeholder/500/750'}
-                alt={state.data?.title || 'Movie Poster'}
+                alt={state.data?.title || 'Affiche de film'}
                 fill
                 className="object-cover rounded-l-lg"
                 data-ai-hint="movie poster"
@@ -162,21 +162,21 @@ export default function UploadDialog() {
                 </div>
 
                 <div className='space-y-2'>
-                    <h3 className="font-semibold flex items-center gap-2"><Users className="w-4 h-4"/> Cast</h3>
+                    <h3 className="font-semibold flex items-center gap-2"><Users className="w-4 h-4"/> Distribution</h3>
                     <p className="text-sm text-muted-foreground">{state.data?.cast.join(', ')}</p>
                 </div>
               </div>
               </ScrollArea>
               <DialogFooter className='pt-6'>
-                <Button variant="outline" onClick={reset}>Try another</Button>
-                <Button onClick={handleAddToLibrary}>Add to Library</Button>
+                <Button variant="outline" onClick={reset}>Essayer un autre</Button>
+                <Button onClick={handleAddToLibrary}>Ajouter à la bibliothèque</Button>
               </DialogFooter>
             </div>
           </div>
           <DialogClose asChild>
             <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={reset}>
               <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">Fermer</span>
             </Button>
           </DialogClose>
         </DialogContent>

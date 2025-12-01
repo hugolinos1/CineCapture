@@ -27,26 +27,26 @@ export default function LibraryView({ initialItems }: { initialItems: MediaItem[
         <Sidebar collapsible="icon">
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Filters</SidebarGroupLabel>
+              <SidebarGroupLabel>Filtres</SidebarGroupLabel>
               <div className="space-y-4 p-2">
                 <div>
-                  <h4 className="font-medium text-sm mb-2">Status</h4>
+                  <h4 className="font-medium text-sm mb-2">Statut</h4>
                   <RadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as MediaStatus | 'all')}>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="all" id="status-all" />
-                      <Label htmlFor="status-all">All</Label>
+                      <Label htmlFor="status-all">Tous</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="watched" id="status-watched" />
-                      <Label htmlFor="status-watched">Watched</Label>
+                      <Label htmlFor="status-watched">Vus</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="in-progress" id="status-in-progress" />
-                      <Label htmlFor="status-in-progress">In Progress</Label>
+                      <Label htmlFor="status-in-progress">En cours</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="unwatched" id="status-unwatched" />
-                      <Label htmlFor="status-unwatched">Unwatched</Label>
+                      <Label htmlFor="status-unwatched">Non vus</Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -55,15 +55,15 @@ export default function LibraryView({ initialItems }: { initialItems: MediaItem[
                    <RadioGroup value={typeFilter} onValueChange={(value) => setTypeFilter(value as MediaType | 'all')}>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="all" id="type-all" />
-                      <Label htmlFor="type-all">All</Label>
+                      <Label htmlFor="type-all">Tous</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="movie" id="type-movie" />
-                      <Label htmlFor="type-movie">Movies</Label>
+                      <Label htmlFor="type-movie">Films</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="series" id="type-series" />
-                      <Label htmlFor="type-series">Series</Label>
+                      <Label htmlFor="type-series">Séries</Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -73,7 +73,7 @@ export default function LibraryView({ initialItems }: { initialItems: MediaItem[
         </Sidebar>
         <main className="flex-1 p-4 sm:p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold font-headline">My Library</h1>
+            <h1 className="text-3xl font-bold font-headline">Ma Bibliothèque</h1>
             <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon">
                     <LayoutGrid className="h-4 w-4" />
@@ -92,8 +92,8 @@ export default function LibraryView({ initialItems }: { initialItems: MediaItem[
           ) : (
             <div className="flex flex-col items-center justify-center text-center h-[50vh] bg-muted/50 rounded-lg">
                 <Film className="w-16 h-16 text-muted-foreground mb-4"/>
-                <h2 className="text-2xl font-bold mb-2">No Matches Found</h2>
-                <p className="text-muted-foreground">Adjust your filters or add new items to your library.</p>
+                <h2 className="text-2xl font-bold mb-2">Aucun résultat</h2>
+                <p className="text-muted-foreground">Ajustez vos filtres ou ajoutez de nouveaux éléments à votre bibliothèque.</p>
             </div>
           )}
         </main>

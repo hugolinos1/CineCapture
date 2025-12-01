@@ -27,7 +27,7 @@ export default function Header() {
             href="/library"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
           >
-            My Library
+            Ma Bibliothèque
           </Link>
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-4">
@@ -35,7 +35,7 @@ export default function Header() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search library..."
+              placeholder="Rechercher dans la bibliothèque..."
               className="pl-8"
             />
           </div>
@@ -53,17 +53,17 @@ export default function Header() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Cinephile</p>
+                  <p className="text-sm font-medium leading-none">Cinéphile</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     cinephile@example.com
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Profil</DropdownMenuItem>
+              <DropdownMenuItem>Paramètres</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Log out</DropdownMenuItem>
+              <DropdownMenuItem>Se déconnecter</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -13,7 +13,7 @@ export async function processScreenshot(
 
   try {
     if (!dataUri) {
-      throw new Error('No image data provided.');
+      throw new Error('Aucune donnée d\'image fournie.');
     }
 
     const extractedDetails = await extractMovieDetailsFromScreenshot({
@@ -21,15 +21,15 @@ export async function processScreenshot(
     });
 
     if (!extractedDetails || !extractedDetails.title) {
-        throw new Error('Could not extract a title from the screenshot.');
+        throw new Error('Impossible d\'extraire un titre de la capture d\'écran.');
     }
 
     const enrichedDetails = await enrichExtractedMovieDetails(extractedDetails);
 
     return { data: enrichedDetails, error: null, success: true };
   } catch (error) {
-    console.error('Error processing screenshot:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-    return { data: null, error: `Analysis failed: ${errorMessage}`, success: false };
+    console.error('Erreur lors du traitement de la capture d\'écran:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue.';
+    return { data: null, error: `L'analyse a échoué: ${errorMessage}`, success: false };
   }
 }
