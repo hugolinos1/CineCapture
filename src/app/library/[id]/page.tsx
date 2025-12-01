@@ -2,17 +2,28 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Tv, Users } from 'lucide-react';
-
+import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { MediaItem } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const statusInfo = {
   watched: { Icon: CheckCircle, label: 'Vu', color: 'text-green-400' },
@@ -22,6 +33,8 @@ const statusInfo = {
 
 export default function MediaDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { toast } = useToast();
   const id = params.id as string;
   const [item, setItem] = useState<MediaItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,6 +63,32 @@ export default function MediaDetailPage() {
       }
     }
   }, [id]);
+
+  const handleDelete = () => {
+    if (!item) return;
+    try {
+      const localData = localStorage.getItem('cine-capture-library');
+      if (localData) {
+        const allItems: MediaItem[] = JSON.parse(localData);
+        const updatedLibrary = allItems.filter(i => i.id !== item.id);
+        localStorage.setItem('cine-capture-library', JSON.stringify(updatedLibrary));
+
+        // Dispatch storage event to notify other components like the library view
+        window.dispatchEvent(new Event('storage'));
+
+        toast({
+          title: 'Élément supprimé',
+          description: `"${item.title}" a été supprimé de votre bibliothèque.`,
+        });
+
+        router.push('/library');
+      }
+    } catch (e) {
+      console.error("Erreur lors de la suppression de l'élément:", e);
+      setError("Une erreur s'est produite lors de la suppression.");
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -107,11 +146,35 @@ export default function MediaDetailPage() {
             <div className="md:col-span-2 p-6 md:p-8">
               <CardContent className="p-0 space-y-6">
                 <div>
-                  <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
-                    {item.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />}
-                    {item.type === 'movie' ? 'Film' : 'Série'}
-                  </Badge>
-                  <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
+                        {item.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />}
+                        {item.type === 'movie' ? 'Film' : 'Série'}
+                      </Badge>
+                      <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon">
+                          <Trash2 />
+                          <span className="sr-only">Supprimer</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Cette action est irréversible. Cela supprimera définitivement "{item.title}" de votre bibliothèque.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDelete}>Supprimer</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-6 text-sm text-muted-foreground">
@@ -156,3 +219,5 @@ export default function MediaDetailPage() {
     </AppLayout>
   );
 }
+
+    
