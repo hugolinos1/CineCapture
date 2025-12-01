@@ -9,7 +9,7 @@ import { processScreenshot } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import type { EnrichedMovieDetails, MediaItem } from '@/lib/types';
+import type { MediaItem } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
@@ -53,15 +53,15 @@ export default function UploadDialog() {
         title: 'L\'analyse a échoué',
         description: state.error,
       });
-      // Reset preview on error to allow re-submission
-      setPreview(null);
-      if (formRef.current) {
-        formRef.current.reset();
-      }
+      // Reset form but keep preview for resubmission if needed
     }
   }, [state, toast]);
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = (file: File | null) => {
+    if (!file) {
+      setPreview(null);
+      return;
+    }
     const reader = new FileReader();
     reader.onloadend = () => {
       const dataUri = reader.result as string;
@@ -71,10 +71,7 @@ export default function UploadDialog() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      handleFileSelect(selectedFile);
-    }
+    handleFileSelect(e.target.files?.[0] || null);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -83,10 +80,7 @@ export default function UploadDialog() {
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const droppedFile = e.dataTransfer.files?.[0];
-    if (droppedFile) {
-      handleFileSelect(droppedFile);
-    }
+    handleFileSelect(e.dataTransfer.files?.[0] || null);
   };
 
   const handleAddToLibrary = () => {
@@ -96,7 +90,7 @@ export default function UploadDialog() {
       ...state.data,
       id: new Date().toISOString(),
       status: 'unwatched', // Default status
-      genres: [], // Genres might not be available from enrichment, default to empty
+      genres: state.data.genres || [], // Ensure genres is an array
     };
 
     try {
@@ -129,6 +123,11 @@ export default function UploadDialog() {
     if(formRef.current) formRef.current.reset();
   }
 
+  const handleRemovePreview = () => {
+    setPreview(null);
+    if(formRef.current) formRef.current.reset();
+  }
+
   return (
     <>
       <form action={formAction} ref={formRef} className="space-y-4">
@@ -147,7 +146,7 @@ export default function UploadDialog() {
                 variant="ghost" 
                 size="icon" 
                 className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white hover:text-white"
-                onClick={() => setPreview(null)}
+                onClick={handleRemovePreview}
                 type="button"
                 >
                   <X className="h-4 w-4" />
@@ -171,6 +170,7 @@ export default function UploadDialog() {
               onChange={handleFileChange}
               className="hidden"
               accept="image/png, image/jpeg, image/webp"
+              name="file-upload" // Give a name to the input for form reset
             />
           </div>
         )}
@@ -188,11 +188,11 @@ export default function UploadDialog() {
                 data-ai-hint="movie poster"
               />
             </div>
-            <div className="p-6">
+            <div className="p-6 flex flex-col">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-headline mb-2">{state.data?.title}</DialogTitle>
               </DialogHeader>
-              <ScrollArea className="h-[400px] pr-4">
+              <ScrollArea className="h-[400px] pr-4 flex-grow">
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <Badge variant="outline" className="capitalize">{state.data?.type}</Badge>
@@ -215,7 +215,7 @@ export default function UploadDialog() {
                   </div>
                 </div>
               </ScrollArea>
-              <DialogFooter className='pt-6'>
+              <DialogFooter className='pt-6 mt-auto'>
                 <Button variant="outline" onClick={reset}>Essayer un autre</Button>
                 <Button onClick={handleAddToLibrary}>Ajouter à la bibliothèque</Button>
               </DialogFooter>
