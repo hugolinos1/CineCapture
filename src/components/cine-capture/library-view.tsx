@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { Film, Trash2 } from 'lucide-react';
+import { Film, Trash2, PlusCircle } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarProvider } from '../ui/sidebar';
@@ -149,27 +150,35 @@ export default function LibraryView() {
         <main className="flex-1 p-4 sm:p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold font-headline">Ma Bibliothèque</h1>
-            {items.length > 0 && (
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                          <Trash2 className="mr-2 h-4 w-4" /> Vider la bibliothèque
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Êtes-vous absolument sûr(e) ?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Cette action est irréversible. Cela supprimera définitivement tous les éléments de votre bibliothèque.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleClearLibrary}>Oui, tout supprimer</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-            )}
+             <div className="flex items-center gap-4">
+               <Button asChild>
+                <Link href="/">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Ajouter
+                </Link>
+              </Button>
+              {items.length > 0 && (
+                   <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                            <Trash2 className="mr-2 h-4 w-4" /> Vider la bibliothèque
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Êtes-vous absolument sûr(e) ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Cette action est irréversible. Cela supprimera définitivement tous les éléments de votre bibliothèque.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleClearLibrary}>Oui, tout supprimer</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+              )}
+             </div>
           </div>
           {filteredItems.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
