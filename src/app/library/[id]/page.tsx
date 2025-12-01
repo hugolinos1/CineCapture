@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AppLayout from '@/components/layout/app-layout';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,7 @@ export default function MediaDetailPage() {
         const localItems = localData ? JSON.parse(localData) : [];
         const allItems = [...mockLibrary, ...localItems];
         const uniqueItems = Array.from(new Map(allItems.map(i => [i.id, i])).values());
-        const foundItem = uniqueItems.find(i => i.id === id);
+        const foundItem = uniqueItems.find((i: MediaItem) => i.id === id);
         
         if (foundItem) {
           setItem(foundItem);
