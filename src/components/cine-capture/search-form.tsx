@@ -56,6 +56,10 @@ export default function SearchForm() {
         });
         return;
     }
+    
+    // Close dialog and navigate immediately for a better UX
+    reset();
+    router.push('/library');
 
     try {
       const libraryRef = collection(firestore, 'users', user.uid, 'library');
@@ -90,8 +94,6 @@ export default function SearchForm() {
         description: `${newItem.title} a été ajouté à votre bibliothèque personnelle.`,
       });
       
-      router.push('/library');
-      reset();
     } catch (error) {
       console.error("Failed to add to library:", error);
       toast({
