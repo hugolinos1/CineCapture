@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useFormState } from 'react-dom';
+import React, { useState, useRef, useEffect, useActionState } from 'react';
 import { UploadCloud, Loader2, Star, Users, FileText, X, Film, Tv, Languages } from 'lucide-react';
 import Image from 'next/image';
 import { processScreenshot } from '@/lib/actions';
@@ -19,22 +18,9 @@ const initialState = {
   success: false,
 };
 
-function SubmitButton() {
-    // Note: useFormStatus is not used here to avoid the experimental warning,
-    // but in a real app it would be used to show a pending state.
-    // For now, we rely on the parent component's isPending state.
-    return (
-        <Button type="submit" className="w-full">
-            Analyser la capture d'écran
-        </Button>
-    );
-}
-
-
 export default function UploadDialog() {
-  const [state, formAction] = useFormState(processScreenshot, initialState);
+  const [state, formAction, isPending] = useActionState(processScreenshot, initialState);
 
-  const [isPending, setIsPending] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [isResultOpen, setIsResultOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,7 +30,6 @@ export default function UploadDialog() {
 
 
   useEffect(() => {
-    setIsPending(false);
     if (state.success && state.data) {
       setIsResultOpen(true);
     } else if (state.error) {
@@ -82,14 +67,6 @@ export default function UploadDialog() {
     handleFileSelect(e.dataTransfer.files?.[0] || null);
   };
   
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!preview) return;
-    setIsPending(true);
-    const formData = new FormData(event.currentTarget);
-    formAction(formData);
-  };
-
 
   const handleAddToLibrary = () => {
     if (!state.data) return;
@@ -131,7 +108,6 @@ export default function UploadDialog() {
   const reset = () => {
     setPreview(null);
     setIsResultOpen(false);
-    setIsPending(false);
     if(fileInputRef.current) fileInputRef.current.value = '';
     formRef.current?.reset();
   }
@@ -143,7 +119,7 @@ export default function UploadDialog() {
 
   return (
     <>
-      <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-4">
+      <form ref={formRef} action={formAction} className="space-y-4">
         <input type="hidden" name="screenshot" value={preview ?? ''} />
         {preview ? (
           <div className="space-y-4">
