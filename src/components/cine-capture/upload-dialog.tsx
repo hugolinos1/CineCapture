@@ -50,8 +50,8 @@ export default function UploadDialog() {
         title: 'L\'analyse a échoué',
         description: state.error,
       });
-      // Reset preview on error to allow re-submission of the same file
-      reset();
+      // Reset preview on error to allow re-submission
+      setPreview(null);
     }
   }, [state, toast]);
   
@@ -60,12 +60,6 @@ export default function UploadDialog() {
     reader.onloadend = () => {
       const dataUri = reader.result as string;
       setPreview(dataUri);
-      // Use a timeout to ensure the state update is processed before submitting the form.
-      setTimeout(() => {
-        if(formRef.current) {
-          formRef.current.requestSubmit();
-        }
-      }, 0);
     };
     reader.readAsDataURL(file);
   };
@@ -127,7 +121,6 @@ export default function UploadDialog() {
   const reset = () => {
     setPreview(null);
     setIsResultOpen(false);
-    // Reset form action state
     setInitialState({ data: null, error: null, success: false });
     if(formRef.current) formRef.current.reset();
   }
@@ -142,7 +135,14 @@ export default function UploadDialog() {
           value={preview ?? ''}
         />
         {preview ? (
-          <div className="flex justify-center">
+          <div className="space-y-4">
+            <Image 
+              src={preview} 
+              alt="Aperçu de la capture d'écran" 
+              width={500}
+              height={300}
+              className="rounded-md object-contain mx-auto max-h-[300px]" 
+            />
             <SubmitButton />
           </div>
         ) : (
