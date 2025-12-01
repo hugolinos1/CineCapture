@@ -2,16 +2,18 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, notFound } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Tv, Users } from 'lucide-react';
+
 import AppLayout from '@/components/layout/app-layout';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Star, Users, FileText, Film, Tv, Clock, PlayCircle, CheckCircle, ArrowLeft } from 'lucide-react';
-import type { MediaItem } from '@/lib/types';
-import { mockLibrary } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
+import { mockLibrary } from '@/lib/mock-data';
+import type { MediaItem } from '@/lib/types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const statusInfo = {
   watched: { Icon: CheckCircle, label: 'Vu', color: 'text-green-400' },
@@ -24,21 +26,27 @@ export default function MediaDetailPage() {
   const id = params.id as string;
   const [item, setItem] = useState<MediaItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
+    // Ensure this runs only on the client where localStorage is available
+    if (typeof window !== 'undefined' && id) {
       try {
         const localData = localStorage.getItem('cine-capture-library');
         const localItems: MediaItem[] = localData ? JSON.parse(localData) : [];
-        const allItems = [...localItems, ...mockLibrary];
+        const allItems = [...mockLibrary, ...localItems];
+        // Ensure unique items by ID, giving preference to local items if IDs clash
         const uniqueItems = Array.from(new Map(allItems.map(i => [i.id, i])).values());
         const foundItem = uniqueItems.find((i: MediaItem) => i.id === id);
-        
+
         if (foundItem) {
           setItem(foundItem);
+        } else {
+          setError("L'élément demandé n'a pas été trouvé dans votre bibliothèque.");
         }
-      } catch (error) {
-        console.error("Failed to load library item:", error);
+      } catch (e) {
+        console.error("Erreur lors du chargement de l'élément de la bibliothèque:", e);
+        setError("Une erreur s'est produite lors de la récupération des détails.");
       } finally {
         setIsLoading(false);
       }
@@ -48,14 +56,30 @@ export default function MediaDetailPage() {
   if (isLoading) {
     return (
       <AppLayout>
-        <div className="container mx-auto px-4 py-8 text-center">Chargement...</div>
+        <div className="container mx-auto px-4 py-8 text-center">Chargement des détails...</div>
       </AppLayout>
     );
   }
 
-  if (!item) {
-    notFound();
-    return null;
+  if (error || !item) {
+    return (
+      <AppLayout>
+        <main className="container mx-auto px-4 py-8">
+           <div className="mb-6">
+             <Button asChild variant="outline">
+                <Link href="/library">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Retour à la bibliothèque
+                </Link>
+              </Button>
+           </div>
+           <Alert variant="destructive">
+            <AlertTitle>Erreur</AlertTitle>
+            <AlertDescription>{error || "Impossible de charger les détails de cet élément."}</AlertDescription>
+           </Alert>
+        </main>
+      </AppLayout>
+    );
   }
 
   const { Icon: StatusIcon, label: statusLabel, color: statusColor } = statusInfo[item.status];
