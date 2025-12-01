@@ -8,12 +8,14 @@ interface MovieCardProps {
 }
 
 export default function MovieCard({ item }: MovieCardProps) {
+  const posterSrc = item.posterUrl || 'https://picsum.photos/seed/placeholder/500/750';
+
   return (
     <Link href={`/library/${item.id}`} passHref>
       <Card className="overflow-hidden group relative aspect-[2/3] border-0 shadow-lg h-full transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-primary/20">
         <CardContent className="p-0 h-full">
           <Image
-            src={item.posterUrl}
+            src={posterSrc}
             alt={`Affiche pour ${item.title}`}
             width={500}
             height={750}
