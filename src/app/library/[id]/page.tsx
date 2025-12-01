@@ -198,8 +198,8 @@ export default function MediaDetailPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
-                        {typeIcon}
-                        {typeLabel}
+                         {item.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />}
+                        {typeLabels[item.type] || 'Contenu'}
                       </Badge>
                       <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
                     </div>
