@@ -60,19 +60,14 @@ export default function UploadDialog() {
     reader.onloadend = () => {
       const dataUri = reader.result as string;
       setPreview(dataUri);
+      setTimeout(() => {
+        if(formRef.current) {
+          formRef.current.requestSubmit();
+        }
+      }, 0);
     };
     reader.readAsDataURL(file);
   };
-
-  useEffect(() => {
-    if (preview && formRef.current) {
-        // We need to submit the form imperatively to trigger the action
-        // when a file is selected via drag-and-drop or the file input.
-        const formData = new FormData(formRef.current);
-        formAction(formData);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preview]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
