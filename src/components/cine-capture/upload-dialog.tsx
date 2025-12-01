@@ -21,6 +21,7 @@ const initialState = {
 
 export default function UploadDialog() {
   const [state, formAction, isPending] = useActionState(processScreenshot, initialState);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isResultOpen, setIsResultOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,12 +45,13 @@ export default function UploadDialog() {
   const handleFileSelect = (file: File | null) => {
     if (!file) {
       setPreview(null);
+      setSelectedFile(null);
       return;
     }
+    setSelectedFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
-      const dataUri = reader.result as string;
-      setPreview(dataUri);
+      setPreview(reader.result as string);
     };
     reader.readAsDataURL(file);
   };
@@ -67,6 +69,13 @@ export default function UploadDialog() {
     handleFileSelect(e.dataTransfer.files?.[0] || null);
   };
   
+  const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedFile) return;
+    const formData = new FormData();
+    formData.append('screenshotFile', selectedFile);
+    formAction(formData);
+  };
 
   const handleAddToLibrary = () => {
     if (!state.data) return;
@@ -121,14 +130,17 @@ export default function UploadDialog() {
 
   const reset = () => {
     setPreview(null);
+    setSelectedFile(null);
     setIsResultOpen(false);
     if(fileInputRef.current) fileInputRef.current.value = '';
     formRef.current?.reset();
     // Resetting useActionState is not straightforward, but this covers the UI part.
   }
 
-  const handleRemovePreview = () => {
+  const handleRemovePreview = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setPreview(null);
+    setSelectedFile(null);
     if(fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -139,7 +151,7 @@ export default function UploadDialog() {
     <>
       <form
         ref={formRef}
-        action={formAction}
+        onSubmit={submitForm}
         className="flex flex-col items-center justify-center space-y-6 text-center"
       >
         <div 
@@ -156,7 +168,6 @@ export default function UploadDialog() {
             onChange={handleFileChange}
             accept="image/*"
           />
-          <input type="hidden" name="screenshot" value={preview || ''} />
 
           {preview ? (
             <div className="relative">

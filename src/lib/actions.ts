@@ -5,17 +5,25 @@ import { extractMovieDetailsFromScreenshot } from '@/ai/flows/extract-movie-deta
 import { enrichExtractedMovieDetails } from '@/ai/flows/enrich-extracted-movie-details';
 import type { EnrichedMovieDetails } from '@/lib/types';
 
+async function fileToDataUri(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  return `data:${file.type};base64,${buffer.toString('base64')}`;
+}
+
 export async function processScreenshot(
   prevState: any,
   formData: FormData,
 ): Promise<{ data: EnrichedMovieDetails | null; error: string | null; success: boolean }> {
-  const dataUri = formData.get('screenshot') as string;
+  const file = formData.get('screenshotFile') as File | null;
 
-  if (!dataUri) {
-    return { data: null, error: 'Aucune image fournie.', success: false };
+  if (!file) {
+    return { data: null, error: 'Aucun fichier image fourni.', success: false };
   }
 
   try {
+    const dataUri = await fileToDataUri(file);
+
     const extractedDetails = await extractMovieDetailsFromScreenshot({
       photoDataUri: dataUri,
     });
