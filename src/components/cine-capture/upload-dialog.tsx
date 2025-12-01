@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useActionState } from 'react';
-import { UploadCloud, Loader2, Star, Users, FileText, X, Film, Tv, Languages } from 'lucide-react';
+import { UploadCloud, Loader2, Star, Users, FileText, X, Film, Tv } from 'lucide-react';
 import Image from 'next/image';
 import { processScreenshot } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
