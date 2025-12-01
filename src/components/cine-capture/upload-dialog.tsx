@@ -57,13 +57,16 @@ export default function UploadDialog() {
     reader.onloadend = () => {
       const dataUri = reader.result as string;
       setPreview(dataUri);
-      // Use a FormData object to trigger the action
-      const formData = new FormData();
-      formData.append('screenshot', dataUri);
-      formAction(formData);
     };
     reader.readAsDataURL(file);
   };
+
+  useEffect(() => {
+    if (preview && formRef.current) {
+        formRef.current.requestSubmit();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preview])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
