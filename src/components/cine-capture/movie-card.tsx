@@ -1,9 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { MediaItem } from '@/lib/types';
-import { CheckCircle, PlayCircle, Clock } from 'lucide-react';
+import { CheckCircle, PlayCircle, Clock, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '../ui/button';
 
 const statusIcons = {
   watched: <CheckCircle className="h-4 w-4 text-green-400" />,
@@ -11,10 +12,22 @@ const statusIcons = {
   unwatched: <Clock className="h-4 w-4 text-gray-400" />,
 };
 
-export default function MovieCard({ item }: { item: MediaItem }) {
+interface MovieCardProps {
+  item: MediaItem;
+  onDeleteRequest: (item: MediaItem) => void;
+}
+
+export default function MovieCard({ item, onDeleteRequest }: MovieCardProps) {
+  
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDeleteRequest(item);
+  };
+
   return (
-    <Link href={`/library/${item.id}`} passHref>
-      <Card className="overflow-hidden group relative aspect-[2/3] border-0 shadow-lg h-full cursor-pointer">
+    <Card className="overflow-hidden group relative aspect-[2/3] border-0 shadow-lg h-full cursor-pointer">
+      <Link href={`/library/${item.id}`} passHref className="absolute inset-0 z-0">
         <CardContent className="p-0 h-full">
           <Image
             src={item.posterUrl}
@@ -31,13 +44,23 @@ export default function MovieCard({ item }: { item: MediaItem }) {
                <p className="text-xs text-gray-300 line-clamp-2">{item.summary}</p>
             </div>
           </div>
-          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 group-hover:opacity-0 transition-opacity duration-300">
-            <Badge className="bg-black/50 backdrop-blur-sm border-none text-white">
-              {statusIcons[item.status]}
-            </Badge>
-          </div>
         </CardContent>
-      </Card>
-    </Link>
+      </Link>
+      
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1 transition-opacity duration-300">
+        <Badge className="bg-black/50 backdrop-blur-sm border-none text-white group-hover:opacity-0 transition-opacity duration-300">
+          {statusIcons[item.status]}
+        </Badge>
+        <Button
+          variant="destructive"
+          size="icon"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          onClick={handleDeleteClick}
+        >
+          <Trash2 className="h-4 w-4" />
+          <span className="sr-only">Supprimer</span>
+        </Button>
+      </div>
+    </Card>
   );
 }
