@@ -1,12 +1,25 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { Film } from 'lucide-react';
+import { Film, Trash2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarProvider } from '../ui/sidebar';
+import { Button } from '../ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
 
 const LIBRARY_KEY = 'cine-capture-library';
 
@@ -15,12 +28,15 @@ export default function LibraryView() {
   const [isMounted, setIsMounted] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
+  const { toast } = useToast();
 
   const loadLibrary = useCallback(() => {
     try {
       const localData = localStorage.getItem(LIBRARY_KEY);
       if (localData) {
         setItems(JSON.parse(localData));
+      } else {
+        setItems([]);
       }
     } catch (error) {
       console.error("Failed to load library from localStorage:", error);
@@ -49,8 +65,32 @@ export default function LibraryView() {
       const statusMatch = statusFilter === 'all' || item.status === statusFilter;
       const typeMatch = typeFilter === 'all' || item.type === typeFilter;
       return statusMatch && typeMatch;
-    }).sort((a, b) => new Date(b.id).getTime() - new Date(a.id).getTime()); // Sort by creation date
+    }).sort((a, b) => {
+        // Handle potential invalid date strings if any old data remains
+        const dateA = new Date(a.id).getTime();
+        const dateB = new Date(b.id).getTime();
+        if (isNaN(dateA) || isNaN(dateB)) return 0;
+        return dateB - dateA;
+    });
   }, [items, statusFilter, typeFilter]);
+
+  const handleClearLibrary = () => {
+    try {
+      localStorage.removeItem(LIBRARY_KEY);
+      setItems([]);
+      window.dispatchEvent(new StorageEvent('storage', { key: LIBRARY_KEY, newValue: null }));
+      toast({
+        title: 'Bibliothèque vidée',
+        description: 'Tous les éléments ont été supprimés de votre bibliothèque.',
+      });
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de vider la bibliothèque.',
+      });
+    }
+  };
 
   if (!isMounted) {
     return null; 
@@ -109,6 +149,27 @@ export default function LibraryView() {
         <main className="flex-1 p-4 sm:p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold font-headline">Ma Bibliothèque</h1>
+            {items.length > 0 && (
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                          <Trash2 className="mr-2 h-4 w-4" /> Vider la bibliothèque
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Êtes-vous absolument sûr(e) ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Cette action est irréversible. Cela supprimera définitivement tous les éléments de votre bibliothèque.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleClearLibrary}>Oui, tout supprimer</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+            )}
           </div>
           {filteredItems.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
