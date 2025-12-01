@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useActionState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { UploadCloud, Film, Loader2, Star, Users, FileText, AlertTriangle, X } from 'lucide-react';
 import Image from 'next/image';
@@ -65,10 +66,13 @@ export default function UploadDialog() {
 
   useEffect(() => {
     if (preview && formRef.current) {
-        formRef.current.requestSubmit();
+        // We need to submit the form imperatively to trigger the action
+        // when a file is selected via drag-and-drop or the file input.
+        const formData = new FormData(formRef.current);
+        formAction(formData);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preview])
+  }, [preview]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
