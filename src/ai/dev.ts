@@ -1,1 +1,5 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/enrich-extracted-movie-details.ts';
+import '@/ai/flows/extract-movie-details-from-screenshot.ts';

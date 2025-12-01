@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "1",
+      "description": "Abstract sci-fi movie poster",
+      "imageUrl": "https://images.unsplash.com/photo-1611419010196-a360856fc42f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtb3ZpZSUyMHBvc3RlcnxlbnwwfHx8fDE3NjQ1MTYxNDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "movie poster"
+    },
+    {
+      "id": "2",
+      "description": "Drama movie poster with a face",
+      "imageUrl": "https://images.unsplash.com/photo-1641549058491-8a3442385da0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bW92aWUlMjBwb3N0ZXJ8ZW58MHx8fHwxNzY0NTE2MTQ4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "movie poster"
+    },
+    {
+      "id": "3",
+      "description": "Action movie poster with an explosion",
+      "imageUrl": "https://images.unsplash.com/photo-1590179068383-b9c69aacebd3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtb3ZpZSUyMHBvc3RlcnxlbnwwfHx8fDE3NjQ1MTYxNDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "movie poster"
+    },
+    {
+      "id": "4",
+      "description": "Comedy movie poster with bright colors",
+      "imageUrl": "https://images.unsplash.com/photo-1616530940355-351fabd9524b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtb3ZpZSUyMHBvc3RlcnxlbnwwfHx8fDE3NjQ1MTYxNDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "movie poster"
+    },
+    {
+      "id": "5",
+      "description": "Thriller series poster with dark tones",
+      "imageUrl": "https://images.unsplash.com/photo-1696787717706-d9d9fc9313fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzZXJpZXMlMjBwb3N0ZXJ8ZW58MHx8fHwxNzY0NTgzMDQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "series poster"
+    },
+    {
+      "id": "6",
+      "description": "Fantasy series poster with a mythical creature",
+      "imageUrl": "https://images.unsplash.com/photo-1517186958245-5b1e715f4597?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzZXJpZXMlMjBwb3N0ZXJ8ZW58MHx8fHwxNzY0NTgzMDQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "series poster"
+    },
+    {
+      "id": "7",
+      "description": "Sci-fi series poster with a spaceship",
+      "imageUrl": "https://images.unsplash.com/photo-1517186958245-5b1e715f4597?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzZXJpZXMlMjBwb3N0ZXJ8ZW58MHx8fHwxNzY0NTgzMDQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "series poster"
+    },
+    {
+      "id": "8",
+      "description": "Documentary poster with a nature scene",
+      "imageUrl": "https://images.unsplash.com/photo-1634845077820-eb1702e94d80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkb2N1bWVudGFyeSUyMHBvc3RlcnxlbnwwfHx8fDE3NjQ1ODMwNDZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "documentary poster"
+    }
+  ]
 }
