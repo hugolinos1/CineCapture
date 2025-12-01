@@ -103,48 +103,50 @@ export default function LibraryView() {
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Filtres</SidebarGroupLabel>
-              <div className="space-y-4 px-2">
-                <div>
-                  <h4 className="font-medium text-sm mb-2">Statut</h4>
-                  <RadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as MediaStatus | 'all')}>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="all" id="status-all" />
-                      <Label htmlFor="status-all">Tous</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="watched" id="status-watched" />
-                      <Label htmlFor="status-watched">Vus</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="in-progress" id="status-in-progress" />
-                      <Label htmlFor="status-in-progress">En cours</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="unwatched" id="status-unwatched" />
-                      <Label htmlFor="status-unwatched">Non vus</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm mb-2">Type</h4>
-                   <RadioGroup value={typeFilter} onValueChange={(value) => setTypeFilter(value as MediaType | 'all')}>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="all" id="type-all" />
-                      <Label htmlFor="type-all">Tous</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="movie" id="type-movie" />
-                      <Label htmlFor="type-movie">Films</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="series" id="type-series" />
-                      <Label htmlFor="type-series">Séries</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="miniseries" id="type-miniseries" />
-                      <Label htmlFor="type-miniseries">Mini-séries</Label>
-                    </div>
-                  </RadioGroup>
+              <div className="px-2">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Statut</h4>
+                    <RadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as MediaStatus | 'all')} className="ml-1">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="all" id="status-all" />
+                        <Label htmlFor="status-all">Tous</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="watched" id="status-watched" />
+                        <Label htmlFor="status-watched">Vus</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="in-progress" id="status-in-progress" />
+                        <Label htmlFor="status-in-progress">En cours</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="unwatched" id="status-unwatched" />
+                        <Label htmlFor="status-unwatched">Non vus</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Type</h4>
+                     <RadioGroup value={typeFilter} onValueChange={(value) => setTypeFilter(value as MediaType | 'all')} className="ml-1">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="all" id="type-all" />
+                        <Label htmlFor="type-all">Tous</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="movie" id="type-movie" />
+                        <Label htmlFor="type-movie">Films</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="series" id="type-series" />
+                        <Label htmlFor="type-series">Séries</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="miniseries" id="type-miniseries" />
+                        <Label htmlFor="type-miniseries">Mini-séries</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
                 </div>
               </div>
             </SidebarGroup>
