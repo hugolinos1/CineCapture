@@ -16,23 +16,25 @@ export default function LibraryView() {
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
   const [isMounted, setIsMounted] = useState(false);
 
+  const loadLibrary = () => {
+    try {
+      const localData = localStorage.getItem('cine-capture-library');
+      const localItems: MediaItem[] = localData ? JSON.parse(localData) : [];
+      
+      // Combine mock data with local data, giving priority to local items
+      const itemMap = new Map<string, MediaItem>();
+      mockLibrary.forEach(item => itemMap.set(item.id, item));
+      localItems.forEach(item => itemMap.set(item.id, item));
+      
+      setItems(Array.from(itemMap.values()));
+    } catch (error) {
+      console.error("Failed to load library from localStorage:", error);
+      setItems(mockLibrary);
+    }
+  };
+
   useEffect(() => {
     setIsMounted(true); // Component has mounted, safe to access localStorage
-    
-    const loadLibrary = () => {
-      try {
-        const localData = localStorage.getItem('cine-capture-library');
-        const localItems = localData ? JSON.parse(localData) : [];
-        // Combine mock data with local data, ensuring no duplicates if IDs overlap
-        const combined = [...mockLibrary, ...localItems];
-        const uniqueItems = Array.from(new Map(combined.map(item => [item.id, item])).values());
-        setItems(uniqueItems);
-      } catch (error) {
-        console.error("Failed to load library from localStorage:", error);
-        setItems(mockLibrary);
-      }
-    };
-    
     loadLibrary();
 
     // Listen for custom event to reload library when an item is added
