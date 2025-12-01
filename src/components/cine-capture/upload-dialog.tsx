@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { UploadCloud, Film, Loader2, Star, Users, FileText, AlertTriangle, X } from 'lucide-react';
+import { UploadCloud, Loader2, Star, Users, FileText, X } from 'lucide-react';
 import Image from 'next/image';
 import { processScreenshot } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -31,9 +31,12 @@ function SubmitButton() {
 }
 
 export default function UploadDialog() {
-  const [initialState, setInitialState] = useState<{ data: EnrichedMovieDetails | null; error: string | null; success: boolean; }>({ data: null, error: null, success: false });
-  const [state, formAction] = useActionState(processScreenshot, initialState);
-  
+  const [state, formAction, isPending] = useActionState(processScreenshot, {
+    data: null,
+    error: null,
+    success: false,
+  });
+
   const [preview, setPreview] = useState<string | null>(null);
   const [isResultOpen, setIsResultOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -54,7 +57,7 @@ export default function UploadDialog() {
       setPreview(null);
     }
   }, [state, toast]);
-  
+
   const handleFileSelect = (file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -103,7 +106,6 @@ export default function UploadDialog() {
         description: `${newItem.title} a été ajouté à votre bibliothèque personnelle.`,
       });
       
-      // Trigger a re-render/re-fetch on the library page
       window.dispatchEvent(new Event('storage'));
       
       reset();
@@ -121,28 +123,32 @@ export default function UploadDialog() {
   const reset = () => {
     setPreview(null);
     setIsResultOpen(false);
-    setInitialState({ data: null, error: null, success: false });
     if(formRef.current) formRef.current.reset();
   }
-
 
   return (
     <>
       <form action={formAction} ref={formRef} className="space-y-4">
-         <input
-          type="hidden"
-          name="screenshot"
-          value={preview ?? ''}
-        />
+        <input type="hidden" name="screenshot" value={preview ?? ''} />
         {preview ? (
           <div className="space-y-4">
-            <Image 
-              src={preview} 
-              alt="Aperçu de la capture d'écran" 
-              width={500}
-              height={300}
-              className="rounded-md object-contain mx-auto max-h-[300px]" 
-            />
+            <div className="relative">
+              <Image 
+                src={preview} 
+                alt="Aperçu de la capture d'écran" 
+                width={500}
+                height={300}
+                className="rounded-md object-contain mx-auto max-h-[300px]" 
+              />
+               <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white hover:text-white"
+                onClick={() => setPreview(null)}
+                >
+                  <X className="h-4 w-4" />
+              </Button>
+            </div>
             <SubmitButton />
           </div>
         ) : (
@@ -183,27 +189,27 @@ export default function UploadDialog() {
                 <DialogTitle className="text-2xl font-headline mb-2">{state.data?.title}</DialogTitle>
               </DialogHeader>
               <ScrollArea className="h-[400px] pr-4">
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <Badge variant="outline" className="capitalize">{state.data?.type}</Badge>
                     {state.data?.rating && (
                         <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                        <span>{state.data.rating.toFixed(1)}</span>
+                          <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                          <span>{state.data.rating.toFixed(1)}</span>
                         </div>
                     )}
-                </div>
+                  </div>
 
-                <div className='space-y-2'>
-                    <h3 className="font-semibold flex items-center gap-2"><FileText className="w-4 h-4"/> Synopsis</h3>
-                    <p className="text-sm text-muted-foreground">{state.data?.summary}</p>
-                </div>
+                  <div className='space-y-2'>
+                      <h3 className="font-semibold flex items-center gap-2"><FileText className="w-4 h-4"/> Synopsis</h3>
+                      <p className="text-sm text-muted-foreground">{state.data?.summary}</p>
+                  </div>
 
-                <div className='space-y-2'>
-                    <h3 className="font-semibold flex items-center gap-2"><Users className="w-4 h-4"/> Distribution</h3>
-                    <p className="text-sm text-muted-foreground">{state.data?.cast.join(', ')}</p>
+                  <div className='space-y-2'>
+                      <h3 className="font-semibold flex items-center gap-2"><Users className="w-4 h-4"/> Distribution</h3>
+                      <p className="text-sm text-muted-foreground">{state.data?.cast.join(', ')}</p>
+                  </div>
                 </div>
-              </div>
               </ScrollArea>
               <DialogFooter className='pt-6'>
                 <Button variant="outline" onClick={reset}>Essayer un autre</Button>
