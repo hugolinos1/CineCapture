@@ -41,25 +41,24 @@ export default function MediaDetailPage() {
   const [item, setItem] = useState<MediaItem | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
-  const findItem = useCallback((itemId: string): MediaItem | null => {
-    try {
-      const localData = localStorage.getItem(LIBRARY_KEY);
-      if (!localData) return null;
-      const library: MediaItem[] = JSON.parse(localData);
-      return library.find(i => i.id === itemId) || null;
-    } catch (error) {
-      console.error("Failed to find item in localStorage:", error);
-      return null;
-    }
-  }, []);
-
   useEffect(() => {
     if (id) {
-      const foundItem = findItem(id);
-      setItem(foundItem);
+      try {
+        const localData = localStorage.getItem(LIBRARY_KEY);
+        if (localData) {
+          const library: MediaItem[] = JSON.parse(localData);
+          const foundItem = library.find(i => i.id === id);
+          setItem(foundItem || null);
+        } else {
+          setItem(null);
+        }
+      } catch (error) {
+        console.error("Failed to find item in localStorage:", error);
+        setItem(null);
+      }
     }
     setLoading(false);
-  }, [id, findItem]);
+  }, [id]);
 
   const handleDelete = () => {
     if (!item) return;
