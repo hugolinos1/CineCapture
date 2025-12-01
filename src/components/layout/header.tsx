@@ -1,5 +1,8 @@
+
+'use client';
+
 import Link from 'next/link';
-import { Clapperboard, Film, Search, User } from 'lucide-react';
+import { Clapperboard, Film, Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,8 +14,51 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth, useUser } from '@/firebase';
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function Header() {
+  const auth = useAuth();
+  const { user, loading } = useUser();
+  const { toast } = useToast();
+
+  const handleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      toast({
+        title: 'Connexion réussie',
+        description: 'Bienvenue !',
+      });
+    } catch (error) {
+      console.error("Erreur lors de la connexion :", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur de connexion',
+        description: "Impossible de se connecter avec Google. Veuillez réessayer.",
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: 'Déconnexion réussie',
+      });
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion :", error);
+       toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Impossible de se déconnecter. Veuillez réessayer.",
+      });
+    }
+  };
+
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
       <div className="container flex h-14 items-center">
@@ -39,35 +85,42 @@ export default function Header() {
               className="pl-8"
             />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="@user" />
-                  <AvatarFallback>
-                    <User />
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Cinéphile</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    cinephile@example.com
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Profil</DropdownMenuItem>
-              <DropdownMenuItem>Paramètres</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Se déconnecter</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {loading ? (
+             <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+          ) : user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'Utilisateur'} />
+                    <AvatarFallback>
+                      <User />
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Se déconnecter</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button onClick={handleSignIn}>Se connecter</Button>
+          )}
         </div>
       </div>
     </header>
   );
 }
+
