@@ -60,6 +60,7 @@ export default function UploadDialog() {
     reader.onloadend = () => {
       const dataUri = reader.result as string;
       setPreview(dataUri);
+      // Use a timeout to ensure the state update is processed before submitting the form.
       setTimeout(() => {
         if(formRef.current) {
           formRef.current.requestSubmit();
@@ -126,6 +127,7 @@ export default function UploadDialog() {
   const reset = () => {
     setPreview(null);
     setIsResultOpen(false);
+    // Reset form action state
     setInitialState({ data: null, error: null, success: false });
     if(formRef.current) formRef.current.reset();
   }
