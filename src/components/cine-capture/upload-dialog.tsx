@@ -68,14 +68,6 @@ export default function UploadDialog() {
     e.preventDefault();
     handleFileSelect(e.dataTransfer.files?.[0] || null);
   };
-  
-  const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!selectedFile) return;
-    const formData = new FormData();
-    formData.append('screenshotFile', selectedFile);
-    formAction(formData);
-  };
 
   const handleAddToLibrary = () => {
     if (!state.data) return;
@@ -134,7 +126,6 @@ export default function UploadDialog() {
     setIsResultOpen(false);
     if(fileInputRef.current) fileInputRef.current.value = '';
     formRef.current?.reset();
-    // Resetting useActionState is not straightforward, but this covers the UI part.
   }
 
   const handleRemovePreview = (e: React.MouseEvent) => {
@@ -151,7 +142,7 @@ export default function UploadDialog() {
     <>
       <form
         ref={formRef}
-        onSubmit={submitForm}
+        action={formAction}
         className="flex flex-col items-center justify-center space-y-6 text-center"
       >
         <div 
