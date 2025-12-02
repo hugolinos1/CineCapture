@@ -1,11 +1,11 @@
 
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown, LogIn } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown, LogIn, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/app-layout';
 import { Badge } from '@/components/ui/badge';
@@ -104,12 +104,17 @@ export default function MediaDetailPage() {
   if (isLoading) {
     return (
       <AppLayout>
-        <div className="container mx-auto px-4 py-8 text-center">Chargement des détails...</div>
+        <div className="container mx-auto px-4 py-8 text-center flex justify-center items-center h-full">
+            <div className='flex flex-col items-center gap-4 text-muted-foreground'>
+              <Loader2 className="w-12 h-12 animate-spin" />
+              <p className="text-lg">Chargement des détails...</p>
+            </div>
+        </div>
       </AppLayout>
     );
   }
 
-  if (!user && !userLoading) {
+  if (!user) {
      return (
       <AppLayout>
         <main className="container mx-auto px-4 py-8">
@@ -133,8 +138,7 @@ export default function MediaDetailPage() {
     );
   }
 
-
-  if (!item && !isLoading) {
+  if (error || !item) {
     return (
       <AppLayout>
         <main className="container mx-auto px-4 py-8">
@@ -148,16 +152,12 @@ export default function MediaDetailPage() {
            </div>
            <Alert variant="destructive">
             <AlertTitle>Erreur</AlertTitle>
-            <AlertDescription>{"L'élément demandé n'a pas été trouvé dans votre bibliothèque."}</AlertDescription>
+            <AlertDescription>{error?.message || "L'élément demandé n'a pas été trouvé dans votre bibliothèque."}</AlertDescription>
            </Alert>
         </main>
       </AppLayout>
     );
   }
-  
-  // This should not happen if the logic above is correct, but as a safeguard.
-  if (!item) return null;
-
 
   const { Icon: StatusIcon, label: statusLabel, color: statusColor } = statusInfo[item.status];
   const typeIcon = item.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />;

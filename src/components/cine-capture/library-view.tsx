@@ -94,7 +94,7 @@ export default function LibraryView() {
       )
   }
 
-  if (!user && !userLoading) {
+  if (!user) {
     return (
         <main className="flex-1 p-4 sm:p-6 md:p-8">
             <div className="flex flex-col items-center justify-center text-center h-[70vh] bg-muted/50 rounded-lg">
