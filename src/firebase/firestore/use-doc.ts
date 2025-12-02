@@ -22,7 +22,7 @@ export function useDoc<T extends DocumentData>(
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // If the docRef is not yet available, set loading and wait.
+    // If the docRef is not yet available, do nothing and wait.
     if (!docRef) {
       setLoading(true);
       setData(null);
@@ -38,10 +38,11 @@ export function useDoc<T extends DocumentData>(
         if (docSnap.exists()) {
           setData({ id: docSnap.id, ...docSnap.data() } as T);
         } else {
-          setData(null); // Document does not exist
+          // Document does not exist
+          setData(null);
+          setError(new Error("Document does not exist."));
         }
         setLoading(false);
-        setError(null);
       },
       (err) => {
         console.error(`Error fetching document ${docRef.path}:`, err);
@@ -53,6 +54,8 @@ export function useDoc<T extends DocumentData>(
 
     // Cleanup subscription on unmount or when docRef changes.
     return () => unsubscribe();
+    // The docRef object itself is the dependency. useMemo in the component
+    // ensures this dependency is stable.
   }, [docRef]);
 
   return { data, loading, error };

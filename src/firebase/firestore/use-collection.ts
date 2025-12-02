@@ -21,7 +21,7 @@ export function useCollection<T extends DocumentData>(
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // If the query is not yet available, set loading and wait.
+    // If the query is not yet available, do nothing and wait.
     if (!firestoreQuery) {
       setLoading(true);
       setData(null);
@@ -31,6 +31,7 @@ export function useCollection<T extends DocumentData>(
 
     setLoading(true);
     
+    // Subscribe to the query.
     const unsubscribe = onSnapshot(
       firestoreQuery,
       (snapshot) => {
@@ -52,8 +53,9 @@ export function useCollection<T extends DocumentData>(
 
     // Cleanup subscription on unmount or when query changes.
     return () => unsubscribe();
+    // The query object itself is the dependency. useMemo in the component
+    // ensures this dependency is stable.
   }, [firestoreQuery]);
 
   return { data, loading, error };
 }
-
