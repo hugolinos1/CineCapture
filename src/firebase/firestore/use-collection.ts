@@ -21,14 +21,14 @@ export function useCollection<T extends DocumentData>(
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // If the query is not yet available, do nothing.
     if (!firestoreQuery) {
-      setLoading(false);
-      setData([]); // Set to empty array for consistency
+      setData(null);
+      setLoading(true); // Remain in loading state until a valid query is provided
       return;
     }
 
     setLoading(true);
-
     const unsubscribe = onSnapshot(
       firestoreQuery,
       (snapshot) => {

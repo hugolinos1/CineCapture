@@ -22,14 +22,14 @@ export function useDoc<T extends DocumentData>(
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // If the docRef is not yet available, do nothing.
     if (!docRef) {
-      setLoading(false);
       setData(null);
+      setLoading(true); // Remain in loading state until a valid ref is provided
       return;
     }
 
     setLoading(true);
-
     const unsubscribe = onSnapshot(
       docRef,
       (docSnap) => {
