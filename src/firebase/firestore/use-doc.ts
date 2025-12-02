@@ -22,14 +22,16 @@ export function useDoc<T extends DocumentData>(
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // If the docRef is not yet available, do nothing.
+    // If the docRef is not yet available, set loading and wait.
     if (!docRef) {
+      setLoading(true);
       setData(null);
-      setLoading(true); // Remain in loading state until a valid ref is provided
+      setError(null);
       return;
     }
 
     setLoading(true);
+
     const unsubscribe = onSnapshot(
       docRef,
       (docSnap) => {
@@ -44,13 +46,14 @@ export function useDoc<T extends DocumentData>(
       (err) => {
         console.error(`Error fetching document ${docRef.path}:`, err);
         setError(err);
+        setData(null);
         setLoading(false);
       }
     );
 
-    // Cleanup subscription on unmount
+    // Cleanup subscription on unmount or when docRef changes.
     return () => unsubscribe();
-  }, [docRef]); // Re-run effect when the docRef object itself changes
+  }, [docRef]);
 
   return { data, loading, error };
 }

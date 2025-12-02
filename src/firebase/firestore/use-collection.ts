@@ -21,14 +21,16 @@ export function useCollection<T extends DocumentData>(
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // If the query is not yet available, do nothing.
+    // If the query is not yet available, set loading and wait.
     if (!firestoreQuery) {
+      setLoading(true);
       setData(null);
-      setLoading(true); // Remain in loading state until a valid query is provided
+      setError(null);
       return;
     }
 
     setLoading(true);
+    
     const unsubscribe = onSnapshot(
       firestoreQuery,
       (snapshot) => {
@@ -43,13 +45,15 @@ export function useCollection<T extends DocumentData>(
       (err) => {
         console.error(`Error fetching collection:`, err);
         setError(err);
+        setData(null);
         setLoading(false);
       }
     );
 
-    // Cleanup subscription on unmount
+    // Cleanup subscription on unmount or when query changes.
     return () => unsubscribe();
-  }, [firestoreQuery]); // Re-run effect when the query object itself changes
+  }, [firestoreQuery]);
 
   return { data, loading, error };
 }
+
