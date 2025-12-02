@@ -1,10 +1,8 @@
 
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   onSnapshot,
-  query,
-  type Firestore,
   type DocumentData,
   type Query,
 } from 'firebase/firestore';
@@ -15,25 +13,15 @@ interface UseCollectionReturn<T> {
   error: Error | null;
 }
 
-// Helper to serialize a query to a stable string
-const serializeQuery = (q: Query): string => {
-  // @ts-ignore internal property _query
-  const queryCanonicalId = q._query.canonicalId();
-  return queryCanonicalId;
-}
-
-
 export function useCollection<T extends DocumentData>(
   firestoreQuery: Query | null
 ): UseCollectionReturn<T> {
   const [data, setData] = useState<T[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  
-  const serializedQuery = useMemo(() => firestoreQuery ? serializeQuery(firestoreQuery) : null, [firestoreQuery]);
 
   useEffect(() => {
-    if (!firestoreQuery || !serializedQuery) {
+    if (!firestoreQuery) {
       setLoading(false);
       setData([]);
       return;
@@ -60,7 +48,7 @@ export function useCollection<T extends DocumentData>(
     );
 
     return () => unsubscribe();
-  }, [serializedQuery]); // Depend on the stable serialized query string
+  }, [firestoreQuery]); // Depend on the query object directly
 
   return { data, loading, error };
 }

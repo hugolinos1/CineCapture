@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   onSnapshot,
   type DocumentReference,
@@ -21,10 +21,8 @@ export function useDoc<T extends DocumentData>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const path = useMemo(() => docRef?.path, [docRef]);
-
   useEffect(() => {
-    if (!docRef || !path) {
+    if (!docRef) {
       setLoading(false);
       setData(null);
       return;
@@ -51,7 +49,7 @@ export function useDoc<T extends DocumentData>(
     );
 
     return () => unsubscribe();
-  }, [path]); // Depend on the stable path string
+  }, [docRef]); // Depend on the docRef object directly
 
   return { data, loading, error };
 }
