@@ -99,7 +99,7 @@ export default function MediaDetailPage() {
     }
   };
   
-  const isLoading = userLoading || itemLoading;
+  const isLoading = userLoading || (user && itemLoading);
 
   if (isLoading) {
     return (

@@ -48,8 +48,9 @@ export function useDoc<T extends DocumentData>(
       }
     );
 
+    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [docRef]); // Depend on the docRef object directly
+  }, [docRef]); // Re-run effect when the docRef object itself changes
 
   return { data, loading, error };
 }

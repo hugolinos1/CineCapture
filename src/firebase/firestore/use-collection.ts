@@ -23,7 +23,7 @@ export function useCollection<T extends DocumentData>(
   useEffect(() => {
     if (!firestoreQuery) {
       setLoading(false);
-      setData([]);
+      setData([]); // Set to empty array for consistency
       return;
     }
 
@@ -47,8 +47,9 @@ export function useCollection<T extends DocumentData>(
       }
     );
 
+    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [firestoreQuery]); // Depend on the query object directly
+  }, [firestoreQuery]); // Re-run effect when the query object itself changes
 
   return { data, loading, error };
 }

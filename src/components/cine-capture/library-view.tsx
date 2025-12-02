@@ -81,7 +81,7 @@ export default function LibraryView() {
     }
   };
 
-  const isLoading = userLoading || itemsLoading;
+  const isLoading = userLoading || (user && itemsLoading);
 
   if (isLoading) {
       return (
