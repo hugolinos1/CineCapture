@@ -1,39 +1,29 @@
 /**
- * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-generated
- * data, such as content libraries, captures, and notes, is stored within a private data tree
- * unique to each user. Access is granted only to the authenticated owner of that data tree.
+ * Core Philosophy: This ruleset enforces a strict user-ownership model combined with a global administrator role.
+ * User data is heavily siloed, ensuring that a user can only ever access their own information and content.
  *
- * Data Structure: The data is hierarchically organized under the `/users/{userId}` collection.
- * This structural segregation ensures that one user's data is completely isolated from another's,
- * which simplifies security rules and allows for safe and performant list queries within a
- * user's own data.
+ * Data Structure: All user-generated data (profiles, content, captures, notes) is nested within a top-level
+ * `/users/{userId}` collection. This path-based ownership is the primary mechanism for authorization, making rules
+ * simple, performant, and secure. Global data like `/genres` and `/roles_admin` exist at the root level.
  *
  * Key Security Decisions:
- * - User Isolation: A user can only ever read or write data within their own `/users/{userId}` path.
- * - No User Listing: To protect user privacy and prevent data scraping, listing documents
- *   in the top-level `/users` collection is explicitly forbidden.
- * - Public Read-Only Data: The `/genres` collection is public and readable by anyone, but
- *   cannot be modified by clients. This is suitable for global lookup data.
- * - Ambiguous Relationships: The `/contentGenres` collection, which links user-specific content
- *   to public genres, presents a security challenge. Without a clear ownership field (like a
- *   `userId`) on its documents, it's impossible to securely grant client-side write access.
- *   Therefore, this collection is locked down completely, defaulting to the most secure posture.
+ * - User data is private by default. Access is restricted to the document owner or an administrator.
+ * - The top-level `/users` collection cannot be listed to prevent user enumeration.
+ * - An administrator role is granted by the existence of a document in the `/roles_admin/{userId}` collection. Admins have read-only access to all user data and write access to global collections.
+ * - The `/genres` collection is public for reading but writable only by administrators.
+ * - The `/content_genres` join collection is locked down because its schema lacks a `userId` field, making it impossible to securely determine ownership of the relationship. This must be fixed in the data model.
  *
- * Denormalization for Authorization: The rules rely on the `userId` field being denormalized
- * (copied) onto child documents like `Content` and `Capture`. This avoids slow and costly `get()`
- * calls to parent documents for authorization checks, making the rules more performant and secure.
- * For example, a rule on a `Capture` document can directly check `resource.data.userId` instead of
- * fetching the parent `User` document.
+ * Denormalization for Authorization: The rules rely on path-based ownership (`/users/{userId}/...`) to avoid slow and costly `get()` calls for most operations. For role-based access, an `/roles_admin` collection is used, where the existence of a document grants privileges, which is highly performant.
  *
- * Structural Segregation: User-specific, private data (like a user's movie list) is kept in a
- * user-owned subcollection (`/users/{userId}/contents`). This is inherently more secure and
- * performant than a single top-level `/contents` collection that mixes public and private data.
+ * Structural Segregation: Private user data is strictly separated into user-specific subcollections. Publicly readable data (`/genres`) and administrative data (`/roles_admin`) are in their own top-level collections. This separation clarifies access control and enhances security for list operations.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions for improved readability and reusability.
+    // --------------------------------
+    // Helper Functions
+    // --------------------------------
 
     /**
      * Checks if a user is authenticated.
@@ -43,172 +33,138 @@ service cloud.firestore {
     }
 
     /**
-     * Checks if the currently authenticated user's UID matches the provided userId.
-     * This is the fundamental check for document ownership.
+     * Checks if the currently authenticated user is the owner of a document,
+     * based on a provided userId.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * Checks for ownership on an existing document. Used for update and delete
-     * operations to prevent acting on non-existent data.
+     * Checks if the currently authenticated user has administrator privileges.
+     * Admin status is granted by the existence of a document in the /roles_admin collection.
      */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    /**
-     * Validates that the incoming document data for a user's root profile
-     * correctly sets the ID, which is critical for relational integrity.
-     */
-    function hasValidUserCreateData(userId) {
-      return request.resource.data.id == userId;
-    }
+    // --------------------------------
+    // Collection Rules
+    // --------------------------------
 
     /**
-     * Validates that the ID of a user's profile is not being changed on update.
-     */
-    function isUserIdImmutable() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * Validates that an incoming Content document has its userId set correctly.
-     */
-    function hasValidContentCreateData(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /**
-     * Ensures the userId on a Content document cannot be changed after creation.
-     */
-    function isContentOwnerImmutable() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    /**
-     * Validates that an incoming Capture document has its userId and contentId set correctly.
-     */
-    function hasValidCaptureCreateData(userId, contentId) {
-      return request.resource.data.userId == userId && request.resource.data.contentId == contentId;
-    }
-
-    /**
-     * Ensures the userId and contentId on a Capture document cannot be changed.
-     */
-    function isCaptureParentLinkImmutable() {
-      return request.resource.data.userId == resource.data.userId && request.resource.data.contentId == resource.data.contentId;
-    }
-
-    /**
-     * Validates that an incoming Note document has its contentId set correctly.
-     */
-    function hasValidNoteCreateData(contentId) {
-      // NOTE: The `Note` entity schema is missing a `userId` field. While the path
-      // `/users/{userId}` provides ownership context, denormalizing `userId` onto the
-      // Note document itself would align better with authorization best practices.
-      return request.resource.data.contentId == contentId;
-    }
-
-    /**
-     * Ensures the contentId on a Note document cannot be changed.
-     */
-    function isNoteParentLinkImmutable() {
-      return request.resource.data.contentId == resource.data.contentId;
-    }
-
-    /**
-     * @description   Rules for the user's own profile document.
-     * @path          /users/{userId}
-     * @allow         A user (auth.uid: 'user123') can (create) their own profile at /users/user123.
-     * @deny          A user (auth.uid: 'user456') cannot (get) or (update) the profile at /users/user123.
-     * @principle     Restricts access to a user's own data tree and prevents user enumeration.
+     * @description Manages user profile documents.
+     * @path /users/{userId}
+     * @allow A user creating their own profile: (create) auth.uid == userId
+     * @allow An admin reading another user's profile: (get) isAdmin() == true
+     * @deny A user trying to view another user's profile: (get) auth.uid != userId
+     * @principle Restricts access to a user's own data tree and allows self-creation.
      */
     match /users/{userId} {
-      allow get: if isExistingOwner(userId);
+      allow get: if isOwner(userId) || isAdmin();
       allow list: if false;
-      allow create: if isOwner(userId) && hasValidUserCreateData(userId);
-      allow update: if isExistingOwner(userId) && isUserIdImmutable();
-      allow delete: if isExistingOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && resource != null && request.resource.data.id == resource.data.id;
+      allow delete: if isOwner(userId) && resource != null;
 
       /**
-       * @description   Rules for a user's collection of movie/series content.
-       * @path          /users/{userId}/contents/{contentId}
-       * @allow         A user (auth.uid: 'user123') can (create) a new content item in their own collection at /users/user123/contents/movie456.
-       * @deny          A user (auth.uid: 'user456') cannot (list) content items from /users/user123/contents.
-       * @principle     Enforces document ownership for all operations within a user's private subcollection.
+       * @description Manages a user's private collection of content items.
+       * @path /users/{userId}/content/{contentId}
+       * @allow A user creating a new content item in their own library: (create) auth.uid == userId
+       * @allow An admin viewing a user's content: (get, list) isAdmin() == true
+       * @deny A user trying to delete content from another user's library: (delete) auth.uid != userId
+       * @principle Enforces path-based ownership for all nested user data.
        */
-      match /contents/{contentId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidContentCreateData(userId);
-        allow update: if isExistingOwner(userId) && isContentOwnerImmutable();
-        allow delete: if isExistingOwner(userId);
+      match /content/{contentId} {
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && resource != null && request.resource.data.userId == resource.data.userId;
+        allow delete: if isOwner(userId) && resource != null;
 
         /**
-         * @description   Rules for screenshots associated with a specific content item.
-         * @path          /users/{userId}/contents/{contentId}/captures/{captureId}
-         * @allow         A user (auth.uid: 'user123') can (delete) their own capture at /users/user123/contents/movie456/captures/capture789.
-         * @deny          An anonymous user cannot (get) any capture.
-         * @principle     Extends ownership rules to nested subcollections, ensuring data privacy deep in the hierarchy.
+         * @description Manages screenshots uploaded by a user for a specific content item.
+         * @path /users/{userId}/content/{contentId}/captures/{captureId}
+         * @allow A user adding a screenshot to their own content: (create) auth.uid == userId
+         * @allow An admin viewing a user's screenshot: (get, list) isAdmin() == true
+         * @deny A user updating another user's screenshot: (update) auth.uid != userId
+         * @principle Enforces path-based ownership inherited from the parent user document.
          */
         match /captures/{captureId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isOwner(userId) && hasValidCaptureCreateData(userId, contentId);
-          allow update: if isExistingOwner(userId) && isCaptureParentLinkImmutable();
-          allow delete: if isExistingOwner(userId);
+          allow get: if isOwner(userId) || isAdmin();
+          allow list: if isOwner(userId) || isAdmin();
+          allow create: if isOwner(userId) && request.resource.data.userId == userId;
+          allow update: if isOwner(userId) && resource != null && request.resource.data.userId == resource.data.userId;
+          allow delete: if isOwner(userId) && resource != null;
         }
 
         /**
-         * @description   Rules for notes and ratings associated with a specific content item.
-         * @path          /users/{userId}/contents/{contentId}/notes/{noteId}
-         * @allow         A user (auth.uid: 'user123') can (update) their own note at /users/user123/contents/movie456/notes/noteABC.
-         * @deny          A user (auth.uid: 'user456') cannot (create) a note in another user's content folder.
-         * @principle     Maintains strict data ownership for deeply nested user-generated content.
+         * @description Manages notes created by a user for a specific content item.
+         * @path /users/{userId}/content/{contentId}/notes/{noteId}
+         * @allow A user adding a note to their own content: (create) auth.uid == userId
+         * @allow An admin viewing a user's note: (get, list) isAdmin() == true
+         * @deny A user deleting another user's note: (delete) auth.uid != userId
+         * @principle Enforces path-based ownership inherited from the parent user document.
          */
         match /notes/{noteId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isOwner(userId) && hasValidNoteCreateData(contentId);
-          allow update: if isExistingOwner(userId) && isNoteParentLinkImmutable();
-          allow delete: if isExistingOwner(userId);
+          allow get: if isOwner(userId) || isAdmin();
+          allow list: if isOwner(userId) || isAdmin();
+          allow create: if isOwner(userId);
+          allow update: if isOwner(userId) && resource != null;
+          allow delete: if isOwner(userId) && resource != null;
         }
       }
     }
 
     /**
-     * @description   Rules for the global collection of genres.
-     * @path          /genres/{genreId}
-     * @allow         Any user, including unauthenticated ones, can (get) or (list) all genres.
-     * @deny          Any user cannot (create), (update), or (delete) a genre document.
-     * @principle     Provides public read-only access for global, non-sensitive lookup data.
+     * @description Manages the global list of genres.
+     * @path /genres/{genreId}
+     * @allow Any user, signed in or not, reading the list of genres: (get, list) always permitted
+     * @allow An admin creating a new genre: (create) isAdmin() == true
+     * @deny A regular user trying to delete a genre: (delete) isAdmin() == false
+     * @principle Provides public read access for global data while restricting writes to administrators.
      */
     match /genres/{genreId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description   Rules for the content-to-genre relationship links.
-     * @path          /contentGenres/{contentGenreId}
-     * @allow         No operations are permitted from the client.
-     * @deny          A user trying to (create) a link between their content and a genre will be denied.
-     * @principle     Defaults to the most secure posture (fully locked) for collections with an
-     *                ambiguous or insecure ownership model. Client-side modifications are disabled
-     *                to prevent unauthorized creation of relationships. This data should be managed
-     *                by a trusted backend process (e.g., Cloud Functions).
+     * @description Manages admin role assignments.
+     * @path /roles_admin/{userId}
+     * @allow An admin checking if another user is an admin: (get) isAdmin() == true
+     * @allow An admin adding a new admin: (create) isAdmin() == true
+     * @deny A regular user trying to see the list of admins: (list) isAdmin() == false
+     * @principle Secures role management, allowing only existing admins to view or modify roles.
      */
-    match /contentGenres/{contentGenreId} {
+    match /roles_admin/{userId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Manages the join table between content and genres.
+     * @path /content_genres/{contentGenreId}
+     * @allow No operations are permitted directly on this collection.
+     * @deny A user trying to create a link for their content: (create) is denied.
+     * @deny Any user trying to read the collection: (get, list) is denied.
+     * @principle Denies all access due to a schema issue. Writes cannot be secured without a 'userId' field on the document to verify ownership of the content being linked.
+     */
+    match /content_genres/{contentGenreId} {
+      // CRITICAL: Cannot implement owner-only writes. The 'ContentGenre' entity is missing a 'userId' field.
+      // This field is required to validate that the user creating the link actually owns the 'contentId' they are referencing.
+      // Until the schema is updated, all write access must be denied to prevent unauthorized data associations.
       allow get: if false;
       allow list: if false;
-      allow create: if false;
+      allow create: if false; // TODO: Add owner validation once the schema is updated with a 'userId' field.
       allow update: if false;
-      allow delete: if false;
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with a 'userId' field.
     }
   }
 }

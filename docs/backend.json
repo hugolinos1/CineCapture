@@ -4,7 +4,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the CineCapture application.",
+      "description": "Represents a user account in the CineCapture application.",
       "properties": {
         "id": {
           "type": "string",
@@ -12,43 +12,53 @@
         },
         "email": {
           "type": "string",
-          "description": "User's email address.",
+          "description": "User's email address for login and communication.",
           "format": "email"
+        },
+        "passwordHash": {
+          "type": "string",
+          "description": "Hashed password for secure authentication.  Note:  This application will use bcrypt."
         },
         "username": {
           "type": "string",
-          "description": "User's username."
+          "description": "User's chosen username or display name."
         },
-        "profilePictureUrl": {
+        "profileImageUrl": {
           "type": "string",
-          "description": "URL of the user's profile picture.",
+          "description": "URL of the user's profile image.",
           "format": "uri"
         },
-        "joinDate": {
+        "registrationDate": {
           "type": "string",
-          "description": "Date the user joined the application.",
+          "description": "Date and time when the user registered.",
           "format": "date-time"
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "description": "Indicates whether the user is an administrator."
         }
       },
       "required": [
         "id",
         "email",
-        "username"
+        "passwordHash",
+        "username",
+        "registrationDate"
       ]
     },
     "Content": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Content",
       "type": "object",
-      "description": "Represents a movie, series, or mini-series recommendation.",
+      "description": "Represents a movie, series, or mini-series recommended by a user.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the content entity."
+          "description": "Unique identifier for the content item."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Content)"
+          "description": "Reference to the User who recommended this content. (Relationship: User 1:N Content)"
         },
         "title": {
           "type": "string",
@@ -56,11 +66,11 @@
         },
         "type": {
           "type": "string",
-          "description": "Type of content (e.g., movie, series, mini-series)."
+          "description": "Type of content (e.g., 'movie', 'series', 'mini-series')."
         },
         "summary": {
           "type": "string",
-          "description": "Short summary or synopsis of the content."
+          "description": "A brief summary or synopsis of the content."
         },
         "posterUrl": {
           "type": "string",
@@ -69,58 +79,55 @@
         },
         "status": {
           "type": "string",
-          "description": "User's status for the content (e.g., watched, unwatched, in progress)."
+          "description": "User's status for this content (e.g., 'watched', 'unwatched', 'in progress')."
         },
         "tags": {
           "type": "array",
-          "description": "Tags associated with the content.",
+          "description": "Keywords or categories associated with the content.",
           "items": {
             "type": "string"
           }
         },
         "dateAdded": {
           "type": "string",
-          "description": "Date the content was added to the user's library.",
+          "description": "Date when the content was added to the user's library.",
           "format": "date-time"
-        },
-        "platform": {
-          "type": "string",
-          "description": "The streaming platform where the content is available (e.g., Netflix, Prime Video)."
         }
       },
       "required": [
         "id",
         "userId",
         "title",
-        "type"
+        "type",
+        "dateAdded"
       ]
     },
     "Capture": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Capture",
       "type": "object",
-      "description": "Represents a screenshot uploaded by a user.",
+      "description": "Represents a screenshot uploaded by a user for content analysis.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the capture entity."
+          "description": "Unique identifier for the capture."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Capture)"
+          "description": "Reference to the User who uploaded the capture. (Relationship: User 1:N Capture)"
         },
         "contentId": {
           "type": "string",
-          "description": "Reference to Content. (Relationship: Content 1:N Capture)"
+          "description": "Reference to the Content extracted from the capture. (Relationship: Content 1:N Capture)"
         },
         "imageUrl": {
           "type": "string",
-          "description": "URL of the uploaded screenshot image.",
+          "description": "URL of the uploaded image.",
           "format": "uri"
         },
         "uploadDate": {
           "type": "string",
-          "description": "Date the screenshot was uploaded.",
+          "description": "Date when the capture was uploaded.",
           "format": "date-time"
         }
       },
@@ -135,15 +142,15 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Genre",
       "type": "object",
-      "description": "Represents a genre for movies or series.",
+      "description": "Represents a genre associated with a content item.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the genre entity."
+          "description": "Unique identifier for the genre."
         },
         "name": {
           "type": "string",
-          "description": "Name of the genre (e.g., Action, Comedy, Drama)."
+          "description": "Name of the genre (e.g., 'Science Fiction', 'Comedy')."
         }
       },
       "required": [
@@ -155,7 +162,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ContentGenre",
       "type": "object",
-      "description": "Represents the many-to-many relationship between Content and Genre.",
+      "description": "Join table for the many-to-many relationship between Content and Genre.",
       "properties": {
         "contentId": {
           "type": "string",
@@ -175,33 +182,34 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Note",
       "type": "object",
-      "description": "Represents a user's note or rating for a piece of content.",
+      "description": "Represents a user's note or comment on a content item.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the note entity."
+          "description": "Unique identifier for the note."
         },
         "contentId": {
           "type": "string",
-          "description": "Reference to Content. (Relationship: Content 1:N Note)"
+          "description": "Reference to the Content being reviewed. (Relationship: Content 1:N Note)"
         },
         "rating": {
           "type": "number",
-          "description": "User's rating for the content (e.g., on a scale of 1 to 5)."
+          "description": "User's rating for the content (e.g., on a scale of 1-5)."
         },
         "comment": {
           "type": "string",
-          "description": "User's comment or review of the content."
+          "description": "User's comments or review of the content."
         },
         "date": {
           "type": "string",
-          "description": "Date the note was created.",
+          "description": "Date when the note was created.",
           "format": "date-time"
         }
       },
       "required": [
         "id",
-        "contentId"
+        "contentId",
+        "date"
       ]
     }
   },
@@ -220,7 +228,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profiles.  Owned by the user identified by {userId}.",
+          "description": "Stores user profile information.  Access restricted to the user and administrators.",
           "params": [
             {
               "name": "userId",
@@ -230,13 +238,13 @@
         }
       },
       {
-        "path": "/users/{userId}/contents/{contentId}",
+        "path": "/users/{userId}/content/{contentId}",
         "definition": {
           "entityName": "Content",
           "schema": {
             "$ref": "#/backend/entities/Content"
           },
-          "description": "Stores movie/series content recommendations for each user. Includes denormalized 'userId' for authorization independence.",
+          "description": "Stores content items recommended by a specific user. Path-based ownership ensures that only the user can access this data.",
           "params": [
             {
               "name": "userId",
@@ -244,19 +252,19 @@
             },
             {
               "name": "contentId",
-              "description": "The unique identifier for the content."
+              "description": "The unique identifier for the content item."
             }
           ]
         }
       },
       {
-        "path": "/users/{userId}/contents/{contentId}/captures/{captureId}",
+        "path": "/users/{userId}/content/{contentId}/captures/{captureId}",
         "definition": {
           "entityName": "Capture",
           "schema": {
             "$ref": "#/backend/entities/Capture"
           },
-          "description": "Stores screenshots uploaded by the user for specific content. Includes denormalized 'userId' for authorization independence.",
+          "description": "Stores screenshots uploaded by a user for content analysis. Nested within the content to maintain the 1:N relationship.",
           "params": [
             {
               "name": "userId",
@@ -264,7 +272,7 @@
             },
             {
               "name": "contentId",
-              "description": "The unique identifier for the content."
+              "description": "The unique identifier for the content item."
             },
             {
               "name": "captureId",
@@ -274,13 +282,13 @@
         }
       },
       {
-        "path": "/users/{userId}/contents/{contentId}/notes/{noteId}",
+        "path": "/users/{userId}/content/{contentId}/notes/{noteId}",
         "definition": {
           "entityName": "Note",
           "schema": {
             "$ref": "#/backend/entities/Note"
           },
-          "description": "Stores user notes/ratings for content. Includes denormalized 'userId' for authorization independence.",
+          "description": "Stores notes and comments created by the user related to content. Nested within the content to maintain the 1:N relationship.",
           "params": [
             {
               "name": "userId",
@@ -288,7 +296,7 @@
             },
             {
               "name": "contentId",
-              "description": "The unique identifier for the content."
+              "description": "The unique identifier for the content item."
             },
             {
               "name": "noteId",
@@ -304,7 +312,7 @@
           "schema": {
             "$ref": "#/backend/entities/Genre"
           },
-          "description": "Stores the existing genres. Anyone should be able to read it.",
+          "description": "Stores globally available genre types. Read access is public; write access is restricted to admins.",
           "params": [
             {
               "name": "genreId",
@@ -314,23 +322,38 @@
         }
       },
       {
-        "path": "/contentGenres/{contentGenreId}",
+        "path": "/content_genres/{contentGenreId}",
         "definition": {
           "entityName": "ContentGenre",
           "schema": {
             "$ref": "#/backend/entities/ContentGenre"
           },
-          "description": "Stores the relationships between content and genre.",
+          "description": "Stores the relationship between Content and Genre.  Allows genres to be associated with content items.",
           "params": [
             {
               "name": "contentGenreId",
-              "description": "The unique identifier for the content-genre relationship (e.g., a combined contentId and genreId)."
+              "description": "The unique identifier for the content genre relationship."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "roles_admin",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Marks a user as an administrator. The presence of a document at this path grants admin privileges. (Existence over Content)",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support CineCapture's core features: screenshot analysis, metadata enrichment, personal library management, and a Netflix-like interface. The structure prioritizes authorization independence using denormalization and structural segregation to ensure secure and scalable data access. User-specific data is stored in hierarchical paths under the `/users/{userId}` collection, enabling efficient and secure user-based data retrieval. Content, captures, and notes are all organized under the user's document to establish clear ownership and simplify security rules.\n\nAuthorization Independence is achieved by denormalizing the `userId` into the `Content`, `Capture`, and `Note` documents. This allows security rules to validate the user's ownership without needing to perform `get()` operations on parent documents. This is crucial for maintaining atomicity in transactions and batches.\n\nThe structure supports the QAPs (Rules are not Filters) principle. Each collection contains documents with a homogeneous security posture, making `list` operations secure. Path-based ownership (`/users/{userId}/contents/{contentId}`) ensures only the authenticated user can access their own content, captures, and notes. Additionally, global roles are not needed as authorization is derived from `request.auth.uid` and `userId` on the documents."
+    "reasoning": "This Firestore structure is designed to support the CineCapture application's core features, focusing on secure user authentication and personalized content libraries. The structure prioritizes authorization independence and efficient data retrieval, especially when listing content.\n\n*   **Users Collection (`/users/{userId}`):** Stores user profiles, including authentication data (email, password hash) and profile information. Path-based ownership ensures that only the authenticated user or an admin can access a user's profile.\n*   **Content Collection (`/users/{userId}/content/{contentId}`):** Each user has their own subcollection of `content`. This structure enforces path-based ownership, ensuring that only the user who owns the content or an admin can access it. This approach guarantees that users can only see their own content library and isolates data silos for each user. There are no authorization dependencies between different users.\n*   **Roles Collection (`/roles_admin/{userId}`):** An administrator role is created using the 'Existence over Content' method for role management. The existence of a document in `/roles_admin/{userId}` grants administrative privileges to the user with the corresponding `userId`. This design enables easy role assignment and verification in security rules without needing to read the document's content.\n\n**Authorization Independence (Strategy A):** The core of the authorization model relies on path-based ownership (`/users/{userId}/content/{contentId}`). This eliminates the need for `get()` calls in security rules, allowing atomic operations and improving rule complexity.\n\n**Structural Segregation (Strategy B):** Data with different access needs are stored in separate collections. User profiles are stored in `/users/{userId}`, ensuring private access, while admin roles are managed in `/roles_admin/{userId}`.  Each user's content is stored in their own subcollection `users/{userId}/content/{contentId}`, ensuring that users only have access to their own content. This simplifies security rules by enforcing consistent access control within each collection.\n\n**Access Modeling (Strategy C):** Path-based ownership (`/users/{userId}/content/{contentId}`) is used for user-owned content. The `userId` in the path directly corresponds to the authenticated user's `uid`, simplifying the rules.  The admin role leverages the 'Existence over Content' pattern.\n\n**QAPs Support:**\n\n*   **Secure List Operations:** The segregation of user data into separate subcollections (`/users/{userId}/content/{contentId}`) allows secure list operations. Security rules can easily verify that the `request.auth.uid` matches the `userId` in the path, ensuring users can only list content they own.\n\nThis structure provides a secure and scalable foundation for the CineCapture application, aligning with the core design principles and strategies outlined in the prompt."
   }
 }
-    
