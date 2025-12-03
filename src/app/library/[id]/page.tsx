@@ -189,9 +189,6 @@ export default function MediaDetailPage() {
                       <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
                     </div>
                      <div className="flex items-center gap-4">
-                        <div className="h-8 flex items-center">
-                            <PlatformLogo platform={item.platform} className="h-6 w-auto" />
-                        </div>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="icon">
@@ -266,6 +263,12 @@ export default function MediaDetailPage() {
                         </div>
                     </div>
                 )}
+                {item.platform && (
+                  <div className='space-y-2'>
+                      <h3 className="font-semibold text-lg">Disponible sur</h3>
+                      <PlatformLogo platform={item.platform} />
+                  </div>
+                )}
               </CardContent>
             </div>
           </div>
@@ -273,5 +276,3 @@ export default function MediaDetailPage() {
       </main>
   );
 }
-
-    
