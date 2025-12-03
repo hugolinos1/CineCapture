@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Clapperboard, Film, Search, User, LogOut } from 'lucide-react';
+import { Clapperboard, Film, Search, User, LogOut, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,14 +17,22 @@ import {
 import { useAuth, useUser } from '@/firebase';
 import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { usePathname } from 'next/navigation';
+import { useSidebar } from '../ui/sidebar';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 
 export default function Header() {
   const auth = useAuth();
   const { user, loading } = useUser();
   const { toast } = useToast();
+  const pathname = usePathname();
+  const { isMobile, toggleSidebar } = useSidebar();
+
+  const isLibraryPage = pathname.startsWith('/library');
 
   const handleSignIn = async () => {
+    if (!auth) return;
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -43,6 +51,7 @@ export default function Header() {
   };
 
   const handleSignOut = async () => {
+    if (!auth) return;
     try {
       await signOut(auth);
       toast({
@@ -76,51 +85,66 @@ export default function Header() {
             Ma Bibliothèque
           </Link>
         </nav>
-        <div className="flex flex-1 items-center justify-end space-x-4">
-          <div className="relative w-full max-w-sm hidden md:block">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Rechercher dans la bibliothèque..."
-              className="pl-8"
-            />
+        <div className="flex flex-1 items-center justify-end space-x-2">
+           <div className="w-full max-w-sm hidden md:block">
+            <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                type="search"
+                placeholder="Rechercher dans la bibliothèque..."
+                className="pl-8"
+                />
+            </div>
           </div>
-          {loading ? (
-             <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-          ) : user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'Utilisateur'} />
-                    <AvatarFallback>
-                      <User />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Se déconnecter</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button onClick={handleSignIn}>Se connecter</Button>
-          )}
+           <div className='flex items-center gap-2'>
+              <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className='md:hidden'>
+                        <Search className="h-4 w-4" />
+                        <span className="sr-only">Rechercher</span>
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className='p-2 w-[calc(100vw-2rem)]'>
+                     <Input type="search" placeholder="Rechercher..." />
+                </PopoverContent>
+            </Popover>
+
+            {loading ? (
+                <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+            ) : user ? (
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'Utilisateur'} />
+                        <AvatarFallback>
+                        <User />
+                        </AvatarFallback>
+                    </Avatar>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                        </p>
+                    </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Se déconnecter</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+                </DropdownMenu>
+            ) : (
+                <Button onClick={handleSignIn}>Se connecter</Button>
+            )}
+           </div>
         </div>
       </div>
     </header>
   );
 }
-

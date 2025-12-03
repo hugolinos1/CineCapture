@@ -5,10 +5,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { Film, Trash2, PlusCircle, LogIn, Loader2 } from 'lucide-react';
+import { Film, Trash2, PlusCircle, LogIn, Loader2, Filter } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarProvider } from '../ui/sidebar';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarProvider, useSidebar } from '../ui/sidebar';
 import { Button } from '../ui/button';
 import {
   AlertDialog,
@@ -25,23 +25,113 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, writeBatch, getDocs, query, orderBy, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 
+function Filters() {
+  const { typeFilter, setTypeFilter, statusFilter, setStatusFilter } = useLibraryFilters();
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Type</h4>
+        <RadioGroup value={typeFilter} onValueChange={(value) => setTypeFilter(value as MediaType | 'all')} className="ml-1">
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="all" id="type-all" />
+            <Label htmlFor="type-all">Tous</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="movie" id="type-movie" />
+            <Label htmlFor="type-movie">Films</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="series" id="type-series" />
+            <Label htmlFor="type-series">Séries</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="miniseries" id="type-miniseries" />
+            <Label htmlFor="type-miniseries">Mini-séries</Label>
+          </div>
+        </RadioGroup>
+      </div>
+      <div>
+        <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Statut</h4>
+        <RadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as MediaStatus | 'all')} className="ml-1">
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="all" id="status-all" />
+            <Label htmlFor="status-all">Tous</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="watched" id="status-watched" />
+            <Label htmlFor="status-watched">Vus</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="in-progress" id="status-in-progress" />
+            <Label htmlFor="status-in-progress">En cours</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="unwatched" id="status-unwatched" />
+            <Label htmlFor="status-unwatched">Non vus</Label>
+          </div>
+        </RadioGroup>
+      </div>
+    </div>
+  );
+}
+
+
+type LibraryFiltersContextType = {
+  statusFilter: MediaStatus | 'all';
+  setStatusFilter: (status: MediaStatus | 'all') => void;
+  typeFilter: MediaType | 'all';
+  setTypeFilter: (type: MediaType | 'all') => void;
+};
+
+const LibraryFiltersContext = React.createContext<LibraryFiltersContextType | undefined>(undefined);
+
+const useLibraryFilters = () => {
+  const context = React.useContext(LibraryFiltersContext);
+  if (!context) {
+    throw new Error('useLibraryFilters must be used within a LibraryFiltersProvider');
+  }
+  return context;
+};
+
+
+function LibraryFiltersProvider({ children }: { children: React.ReactNode }) {
+  const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
+
+  return (
+    <LibraryFiltersContext.Provider value={{ statusFilter, setStatusFilter, typeFilter, setTypeFilter }}>
+      {children}
+    </LibraryFiltersContext.Provider>
+  );
+}
+
+
 export default function LibraryView() {
+  return (
+    <LibraryFiltersProvider>
+      <LibraryViewContent />
+    </LibraryFiltersProvider>
+  )
+}
+
+function LibraryViewContent() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const { isMobile, toggleSidebar } = useSidebar();
 
   const [items, setItems] = useState<MediaItem[]>([]);
   const [itemsLoading, setItemsLoading] = useState(true);
 
-  const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
-  const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
+  const { statusFilter, typeFilter } = useLibraryFilters();
 
   useEffect(() => {
-    // Ne rien faire tant que l'utilisateur ou firestore n'est pas chargé
     if (!user || !firestore) {
       if (!userLoading) {
         setItemsLoading(false);
+        setItems([]);
       }
       return;
     }
@@ -55,10 +145,7 @@ export default function LibraryView() {
     const unsubscribe: Unsubscribe = onSnapshot(
       libraryQuery,
       (snapshot) => {
-        const result: MediaItem[] = [];
-        snapshot.forEach((doc) => {
-          result.push({ id: doc.id, ...doc.data() } as MediaItem);
-        });
+        const result: MediaItem[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MediaItem));
         setItems(result);
         setItemsLoading(false);
       },
@@ -73,7 +160,6 @@ export default function LibraryView() {
       }
     );
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [user, firestore, toast, userLoading]);
 
@@ -143,74 +229,38 @@ export default function LibraryView() {
   }
 
   return (
-    <SidebarProvider>
       <div className="flex flex-1">
         <Sidebar collapsible="icon">
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Filtres</SidebarGroupLabel>
               <div className="px-2">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Type</h4>
-                     <RadioGroup value={typeFilter} onValueChange={(value) => setTypeFilter(value as MediaType | 'all')} className="ml-1">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="all" id="type-all" />
-                        <Label htmlFor="type-all">Tous</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="movie" id="type-movie" />
-                        <Label htmlFor="type-movie">Films</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="series" id="type-series" />
-                        <Label htmlFor="type-series">Séries</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="miniseries" id="type-miniseries" />
-                        <Label htmlFor="type-miniseries">Mini-séries</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Statut</h4>
-                    <RadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as MediaStatus | 'all')} className="ml-1">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="all" id="status-all" />
-                        <Label htmlFor="status-all">Tous</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="watched" id="status-watched" />
-                        <Label htmlFor="status-watched">Vus</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="in-progress" id="status-in-progress" />
-                        <Label htmlFor="status-in-progress">En cours</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="unwatched" id="status-unwatched" />
-                        <Label htmlFor="status-unwatched">Non vus</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </div>
+                 <Filters />
               </div>
             </SidebarGroup>
           </SidebarContent>
         </Sidebar>
         <main className="flex-1 p-4 sm:p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold font-headline">Ma Bibliothèque</h1>
-             <div className="flex items-center gap-4">
-               <Button onClick={() => router.push('/')}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Ajouter
+             <div className='flex items-center gap-4'>
+                {isMobile && (
+                    <Button variant="outline" size="icon" onClick={toggleSidebar}>
+                        <Filter className="h-4 w-4" />
+                        <span className="sr-only">Filtres</span>
+                    </Button>
+                )}
+                <h1 className="text-2xl md:text-3xl font-bold font-headline">Ma Bibliothèque</h1>
+             </div>
+             <div className="flex items-center gap-2 md:gap-4">
+               <Button onClick={() => router.push('/')} size={isMobile ? 'icon' : 'default'}>
+                  <PlusCircle className={isMobile ? '' : 'mr-2'} />
+                  <span className={isMobile ? 'sr-only' : ''}>Ajouter</span>
                 </Button>
               {items && items.length > 0 && (
                    <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                            <Trash2 className="mr-2 h-4 w-4" /> Vider la bibliothèque
+                        <Button variant="destructive" size={isMobile ? 'sm' : 'sm'}>
+                            <Trash2 className="mr-0 md:mr-2 h-4 w-4" /> <span className='hidden md:inline'>Vider</span>
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -218,8 +268,8 @@ export default function LibraryView() {
                           <AlertDialogTitle>Êtes-vous absolument sûr(e) ?</AlertDialogTitle>
                           <AlertDialogDescription>
                             Cette action est irréversible. Cela supprimera définitivement tous les éléments de votre bibliothèque.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
+                          </dlalogDescription>
+                        </dlalogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Annuler</AlertDialogCancel>
                           <AlertDialogAction onClick={handleClearLibrary}>Oui, tout supprimer</AlertDialogAction>
@@ -244,8 +294,5 @@ export default function LibraryView() {
           )}
         </main>
       </div>
-    </SidebarProvider>
   );
 }
-
-    

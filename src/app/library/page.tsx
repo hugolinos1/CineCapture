@@ -6,7 +6,7 @@ import LibraryView from "@/components/cine-capture/library-view";
 export default function LibraryPage() {
   return (
     <AppLayout>
-      <LibraryView />
+        <LibraryView />
     </AppLayout>
   );
 }
