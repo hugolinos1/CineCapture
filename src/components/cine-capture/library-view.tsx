@@ -251,59 +251,59 @@ function LibraryViewContent() {
   }
 
   return (
-      <div className="flex flex-1">
-        <Sidebar collapsible="icon">
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Filtres</SidebarGroupLabel>
-              <div className="px-2">
-                 <Filters allGenres={allGenres} />
-              </div>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
-        <main className="flex-1 p-4 sm:p-6 md:p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className='flex items-center gap-4'>
-                  {isMobile && (
-                      <Sheet>
-                        <SheetTrigger asChild>
-                          <Button variant="outline" size="icon">
-                              <Filter className="h-4 w-4" />
-                              <span className="sr-only">Ouvrir les filtres</span>
-                          </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className='w-[300px]'>
-                          <SheetHeader className='mb-4'>
-                              <SheetTitle>Filtres</SheetTitle>
-                          </SheetHeader>
-                          <Filters allGenres={allGenres}/>
-                        </SheetContent>
-                      </Sheet>
-                  )}
-                  <h1 className="text-2xl md:text-3xl font-bold font-headline">Ma Bibliothèque</h1>
-              </div>
-              <div className="flex items-center gap-2 md:gap-4">
-                <Button onClick={() => router.push('/')} size={isMobile ? 'icon' : 'default'}>
-                    <PlusCircle className={isMobile ? '' : 'mr-2'} />
-                    <span className={isMobile ? 'sr-only' : ''}>Ajouter</span>
-                  </Button>
-              </div>
+    <>
+      <Sidebar collapsible="icon">
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Filtres</SidebarGroupLabel>
+            <div className="px-2">
+               <Filters allGenres={allGenres} />
             </div>
-            {filteredItems.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredItems.map(item => (
-                  <MovieCard key={item.id} item={item} />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-center h-[50vh] bg-muted/50 rounded-lg">
-                  <Film className="w-16 h-16 text-muted-foreground mb-4"/>
-                  <h2 className="text-2xl font-bold mb-2">Aucun résultat</h2>
-                  <p className="text-muted-foreground">Essayez d'ajuster vos filtres ou d'ajouter de nouveaux films.</p>
-              </div>
-            )}
-        </main>
-      </div>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+      <main className="flex-1 p-4 sm:p-6 md:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className='flex items-center gap-4'>
+                {isMobile && (
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button variant="outline" size="icon">
+                            <Filter className="h-4 w-4" />
+                            <span className="sr-only">Ouvrir les filtres</span>
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="left" className='w-[300px]'>
+                        <SheetHeader className='mb-4'>
+                            <SheetTitle>Filtres</SheetTitle>
+                        </SheetHeader>
+                        <Filters allGenres={allGenres}/>
+                      </SheetContent>
+                    </Sheet>
+                )}
+                <h1 className="text-2xl md:text-3xl font-bold font-headline">Ma Bibliothèque</h1>
+            </div>
+            <div className="flex items-center gap-2 md:gap-4">
+              <Button onClick={() => router.push('/')} size={isMobile ? 'icon' : 'default'}>
+                  <PlusCircle className={isMobile ? '' : 'mr-2'} />
+                  <span className={isMobile ? 'sr-only' : ''}>Ajouter</span>
+                </Button>
+            </div>
+          </div>
+          {filteredItems.length > 0 ? (
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
+              {filteredItems.map(item => (
+                <MovieCard key={item.id} item={item} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center h-[50vh] bg-muted/50 rounded-lg">
+                <Film className="w-16 h-16 text-muted-foreground mb-4"/>
+                <h2 className="text-2xl font-bold mb-2">Aucun résultat</h2>
+                <p className="text-muted-foreground">Essayez d'ajuster vos filtres ou d'ajouter de nouveaux films.</p>
+            </div>
+          )}
+      </main>
+    </>
   );
 }

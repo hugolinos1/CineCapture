@@ -27,7 +27,9 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <SidebarProvider>
-            {children}
+            <div className="flex flex-1">
+              {children}
+            </div>
           </SidebarProvider>
           <Toaster />
         </FirebaseClientProvider>
