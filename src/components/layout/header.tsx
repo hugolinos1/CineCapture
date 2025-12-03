@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -13,19 +14,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth, useUser, useFirestore } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously, UserCredential } from 'firebase/auth';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, getDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useRouter } from 'next/navigation';
 
+interface UserProfile {
+  isAdmin: boolean;
+}
+
 export default function Header() {
   const auth = useAuth();
-  const { user, loading } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
 
   const handleUserCreation = async (user: import('firebase/auth').User) => {
     if (!firestore) return;
@@ -37,18 +50,18 @@ export default function Header() {
       const batch = writeBatch(firestore);
       const username = user.isAnonymous ? 'Utilisateur Anonyme' : user.displayName || user.email?.split('@')[0] || 'Nouvel Utilisateur';
       
-      const userDocData = {
+      const userDocData: any = {
         id: user.uid,
         username: username,
         email: user.email,
-        registrationDate: serverTimestamp(),
+        registrationDate: new Date().toISOString(),
         profileImageUrl: user.photoURL || null,
         isAdmin: false,
       };
 
       if (user.email === 'hugues.rabier@gmail.com') {
         const adminRoleRef = doc(firestore, 'roles_admin', user.uid);
-        batch.set(adminRoleRef, { grantedAt: serverTimestamp() });
+        batch.set(adminRoleRef, { grantedAt: new Date().toISOString() });
         userDocData.isAdmin = true;
       }
       
@@ -164,7 +177,7 @@ export default function Header() {
                 </PopoverContent>
             </Popover>
 
-            {loading ? (
+            {isUserLoading ? (
                 <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
             ) : user ? (
                 <DropdownMenu>
@@ -188,7 +201,7 @@ export default function Header() {
                     </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {user.email === 'hugues.rabier@gmail.com' && (
+                    {userProfile?.isAdmin && (
                        <DropdownMenuItem onClick={() => router.push('/admin/users')}>
                           <Shield className="mr-2 h-4 w-4" />
                           <span>Administration</span>

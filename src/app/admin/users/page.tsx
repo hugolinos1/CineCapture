@@ -1,6 +1,7 @@
+
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Loader2, ShieldAlert, Users } from 'lucide-react';
@@ -81,7 +82,7 @@ function AdminDashboard() {
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  {format(new Date(user.registrationDate), "d MMMM yyyy", { locale: fr })}
+                  {user.registrationDate ? format(new Date(user.registrationDate), "d MMMM yyyy", { locale: fr }) : 'N/A'}
                 </TableCell>
                 <TableCell>
                   {user.isAdmin ? (
@@ -113,7 +114,15 @@ export default function AdminUsersPage() {
   const { data: userProfile, isLoading: profileLoading } = useDoc<UserProfile>(userDocRef);
 
   const isLoading = isUserLoading || profileLoading;
-  
+  const isAuthorized = userProfile && userProfile.isAdmin;
+
+  useEffect(() => {
+    // Redirect only when loading is complete and the user is not authorized.
+    if (!isLoading && !isAuthorized) {
+      router.push('/');
+    }
+  }, [isLoading, isAuthorized, router]);
+
   if (isLoading) {
     return (
       <div className="flex-1 p-8 flex justify-center items-center h-full">
@@ -125,11 +134,8 @@ export default function AdminUsersPage() {
     );
   }
 
-  if (!userProfile || !userProfile.isAdmin) {
-      // It's better to redirect than to show an error message for security.
-      if (typeof window !== 'undefined') {
-        router.push('/');
-      }
+  if (!isAuthorized) {
+      // While redirecting, show a message. This content will be briefly visible.
       return (
         <div className="flex-1 p-8 flex justify-center items-center h-full">
           <div className='flex flex-col items-center gap-4 text-destructive'>
