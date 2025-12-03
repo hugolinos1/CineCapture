@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown, LogIn, Loader2 } from 'lucide-react';
@@ -31,7 +31,6 @@ import {
 import { useFirestore, useUser, useDoc } from '@/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import PlatformLogo from '@/components/cine-capture/platform-logo';
-import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
 

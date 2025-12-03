@@ -5,7 +5,6 @@ import { AppleTVPlusLogo, CanalPlusLogo, DisneyPlusLogo, NetflixLogo, PrimeVideo
 
 interface PlatformLogoProps {
   platform?: string;
-  className?: string;
 }
 
 const platformAssets: Record<string, { component: React.ElementType, name: string, needsInvert: boolean }> = {
@@ -17,14 +16,14 @@ const platformAssets: Record<string, { component: React.ElementType, name: strin
   'canal+': { component: CanalPlusLogo, name: 'Canal+', needsInvert: true },
 };
 
-export default function PlatformLogo({ platform, className }: PlatformLogoProps) {
+export default function PlatformLogo({ platform }: PlatformLogoProps) {
   if (!platform) return null;
 
   const assetKey = Object.keys(platformAssets).find(key => platform.toLowerCase().includes(key));
   
   if (!assetKey) {
     return (
-      <div className={cn("text-xs font-semibold text-white", className)}>
+      <div className="text-xs font-semibold text-white">
         <span>{platform}</span>
       </div>
     );
@@ -33,8 +32,8 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
   const { component: LogoComponent, name, needsInvert } = platformAssets[assetKey];
   
   return (
-    <div className={cn("flex items-center justify-center h-full", className)} title={name}>
-      <LogoComponent className={cn("h-full w-auto", needsInvert && "fill-white")} />
+    <div className="flex items-center justify-center h-full" title={name}>
+      <LogoComponent className={cn("h-4 w-auto", needsInvert && "fill-white")} />
     </div>
   );
 }

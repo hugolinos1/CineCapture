@@ -251,7 +251,7 @@ export default function UploadDialog() {
                       <Tv className="mr-2 h-4 w-4" />
                       {typeLabels[result.type] || 'Contenu'}
                     </Badge>
-                    {result.platform && <PlatformLogo platform={result.platform} className="h-6" />}
+                    {result.platform && <div className="h-6"><PlatformLogo platform={result.platform} /></div>}
                   </div>
                   <h2 className="text-3xl font-bold font-headline text-primary-foreground">{result.title}</h2>
                   
@@ -299,5 +299,3 @@ export default function UploadDialog() {
     </>
   );
 }
-
-    
