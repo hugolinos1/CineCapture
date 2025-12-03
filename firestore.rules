@@ -62,7 +62,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if false;
+      allow list: if false; // Prevents user enumeration
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isOwner(userId) && resource != null && request.resource.data.id == resource.data.id;
       allow delete: if isOwner(userId) && resource != null;
@@ -143,7 +143,7 @@ service cloud.firestore {
     match /roles_admin/{userId} {
       allow get: if isAdmin();
       allow list: if isAdmin();
-      allow create: if isAdmin();
+      allow create: if isAdmin() || request.auth.uid == userId; // Allow user to be granted role or admin to grant it
       allow update: if isAdmin() && resource != null;
       allow delete: if isAdmin() && resource != null;
     }
@@ -160,11 +160,7 @@ service cloud.firestore {
       // CRITICAL: Cannot implement owner-only writes. The 'ContentGenre' entity is missing a 'userId' field.
       // This field is required to validate that the user creating the link actually owns the 'contentId' they are referencing.
       // Until the schema is updated, all write access must be denied to prevent unauthorized data associations.
-      allow get: if false;
-      allow list: if false;
-      allow create: if false; // TODO: Add owner validation once the schema is updated with a 'userId' field.
-      allow update: if false;
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with a 'userId' field.
+      allow read, write: if false;
     }
   }
 }

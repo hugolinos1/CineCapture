@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -56,6 +56,8 @@ export default function SignupPage() {
 
       await updateProfile(user, { displayName: values.username });
       
+      const batch = writeBatch(firestore);
+
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDocData = {
         id: user.uid,
@@ -63,30 +65,25 @@ export default function SignupPage() {
         email: user.email,
         registrationDate: new Date().toISOString(),
         profileImageUrl: user.photoURL || null,
-        isAdmin: values.email === 'hugues.rabier@gmail.com',
+        isAdmin: false, 
       };
-      
-      setDoc(userDocRef, userDocData)
-        .then(() => {
-          toast({
-            title: 'Compte créé avec succès !',
-            description: `Bienvenue, ${values.username} !`,
-          });
-          router.push('/library');
-        })
-        .catch((error) => {
-          console.error("Erreur lors de la création du document utilisateur:", error);
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: userDocRef.path,
-              operation: 'create',
-              requestResourceData: userDocData
-          }));
-          toast({
-            variant: 'destructive',
-            title: 'Échec de l\'enregistrement',
-            description: "Votre compte a été créé, mais nous n'avons pas pu enregistrer vos informations de profil.",
-          });
-        });
+      batch.set(userDocRef, userDocData);
+
+      // Grant admin role if the email matches
+      if (values.email === 'hugues.rabier@gmail.com') {
+          const adminRoleRef = doc(firestore, 'roles_admin', user.uid);
+          batch.set(adminRoleRef, { grantedAt: new Date().toISOString() });
+          userDocData.isAdmin = true; // Also update the user doc
+          batch.set(userDocRef, userDocData, { merge: true });
+      }
+
+      await batch.commit();
+
+      toast({
+        title: 'Compte créé avec succès !',
+        description: `Bienvenue, ${values.username} !`,
+      });
+      router.push('/library');
 
     } catch (error: any) {
       console.error("Erreur lors de la création du compte:", error);
@@ -94,7 +91,7 @@ export default function SignupPage() {
       if (error.code === 'auth/email-already-in-use') {
         description = "Cette adresse e-mail est déjà utilisée par un autre compte.";
       }
-      toast({
+       toast({
         variant: 'destructive',
         title: 'Échec de l\'inscription',
         description,
@@ -172,5 +169,3 @@ export default function SignupPage() {
     </main>
   );
 }
-
-    
