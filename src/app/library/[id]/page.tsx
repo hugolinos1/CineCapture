@@ -266,7 +266,7 @@ export default function MediaDetailPage() {
                 {item.platform && (
                   <div className='space-y-2'>
                       <h3 className="font-semibold text-lg">Disponible sur</h3>
-                      <PlatformLogo platform={item.platform} />
+                      <PlatformLogo platform={item.platform} className="h-8 w-32"/>
                   </div>
                 )}
               </CardContent>

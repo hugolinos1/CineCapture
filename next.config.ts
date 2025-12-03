@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'httpshttps',
         hostname: 'm.media-amazon.com',
         port: '',
         pathname: '/**',
@@ -67,6 +67,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'fr.web.img6.acsta.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
         port: '',
         pathname: '/**',
       },
