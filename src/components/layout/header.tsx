@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Clapperboard, Film, Search, User, LogOut, Filter, ChevronDown } from 'lucide-react';
+import { Clapperboard, Film, Search, User, LogOut, Filter, ChevronDown, UserPlus, LogIn as LogInIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,12 +17,14 @@ import { useAuth, useUser } from '@/firebase';
 import { GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { useRouter } from 'next/navigation';
 
 
 export default function Header() {
   const auth = useAuth();
   const { user, loading } = useUser();
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
@@ -33,6 +35,7 @@ export default function Header() {
         title: 'Connexion réussie',
         description: 'Bienvenue !',
       });
+      router.push('/library');
     } catch (error) {
       console.error("Erreur lors de la connexion :", error);
       toast({
@@ -51,6 +54,7 @@ export default function Header() {
         title: 'Connecté en tant qu\'anonyme',
         description: 'Vous naviguez en mode invité.',
       });
+      router.push('/library');
     } catch (error) {
       console.error("Erreur lors de la connexion anonyme :", error);
       toast({
@@ -69,6 +73,7 @@ export default function Header() {
       toast({
         title: 'Déconnexion réussie',
       });
+      router.push('/');
     } catch (error) {
       console.error("Erreur lors de la déconnexion :", error);
        toast({
@@ -81,7 +86,7 @@ export default function Header() {
 
   const handleChangeAccount = async () => {
     await handleSignOut();
-    // No need to call sign-in functions here, user will be presented with sign-in options
+    router.push('/login');
   };
 
 
@@ -143,10 +148,10 @@ export default function Header() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.isAnonymous ? 'Utilisateur Anonyme' : user.displayName}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                        {user.isAnonymous ? 'ID: ' + user.uid.substring(0, 8) : user.email}
-                        </p>
+                        <p className="text-sm font-medium leading-none">{user.isAnonymous ? 'Utilisateur Anonyme' : user.displayName || user.email}</p>
+                        {!user.isAnonymous && <p className="text-xs leading-none text-muted-foreground">
+                         {user.email}
+                        </p>}
                     </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
@@ -164,7 +169,7 @@ export default function Header() {
                  <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button>
-                      Se connecter
+                      Options
                       <ChevronDown className="ml-2 h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -176,6 +181,15 @@ export default function Header() {
                      <DropdownMenuItem onClick={handleAnonymousSignIn}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Connexion anonyme</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                     <DropdownMenuItem onClick={() => router.push('/login')}>
+                      <LogInIcon className="mr-2 h-4 w-4" />
+                      <span>Se connecter</span>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem onClick={() => router.push('/signup')}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      <span>S'inscrire</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

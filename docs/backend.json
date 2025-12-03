@@ -41,7 +41,6 @@
       "required": [
         "id",
         "email",
-        "passwordHash",
         "username",
         "registrationDate"
       ]
@@ -216,7 +215,8 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {
