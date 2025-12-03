@@ -3,6 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import SearchForm from '@/components/cine-capture/search-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UploadCloud, Search } from 'lucide-react';
+import TrendingSection from '@/components/cine-capture/trending-section';
+import { Separator } from '@/components/ui/separator';
 
 export default function Home() {
   return (
@@ -47,6 +49,15 @@ export default function Home() {
               </Card>
             </div>
           </div>
+        </section>
+        
+        <Separator className="my-8" />
+
+        <section className="w-full pb-12 md:pb-24 lg:pb-32">
+            <div className="container px-4 md:px-6 space-y-12">
+                <TrendingSection mediaType="movie" title="Les meilleurs nouveaux films" />
+                <TrendingSection mediaType="tv" title="Les meilleures nouvelles séries" />
+            </div>
         </section>
       </main>
   );

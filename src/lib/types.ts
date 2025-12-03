@@ -23,4 +23,9 @@ export interface MediaItem {
 
 export type EnrichedMovieDetails = EnrichExtractedMovieDetailsOutput;
 
-    
+export interface TrendingMedia {
+    id: number;
+    title: string;
+    posterUrl: string | null;
+    rating: number;
+}

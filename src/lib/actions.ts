@@ -3,7 +3,11 @@
 
 import { extractMovieDetailsFromScreenshot } from '@/ai/flows/extract-movie-details-from-screenshot';
 import { enrichExtractedMovieDetails } from '@/ai/flows/enrich-extracted-movie-details';
-import type { EnrichedMovieDetails } from '@/lib/types';
+import type { EnrichedMovieDetails, TrendingMedia } from '@/lib/types';
+
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
+const BASE_API_URL = 'https://api.themoviedb.org/3';
+const BASE_IMAGE_URL = 'https://image.tmdb.org/t/p/';
 
 async function fileToDataUri(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
@@ -95,5 +99,34 @@ export async function fetchRefreshedMediaItem(
     console.error('Erreur lors du rafraîchissement de la fiche:', error);
     const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue.';
     return { data: null, success: false, error: errorMessage };
+  }
+}
+
+
+export async function getTrendingMedia(mediaType: 'movie' | 'tv'): Promise<TrendingMedia[]> {
+  if (!TMDB_API_KEY) {
+    console.error('TMDB_API_KEY is not set.');
+    return [];
+  }
+
+  const url = `${BASE_API_URL}/trending/${mediaType}/week?api_key=${TMDB_API_KEY}&language=fr-FR`;
+
+  try {
+    const response = await fetch(url, { next: { revalidate: 3600 * 24 } }); // Cache for 24 hours
+    if (!response.ok) {
+      console.error(`TMDB API request failed with status: ${response.status}`);
+      return [];
+    }
+    const data = await response.json();
+
+    return data.results.map((item: any) => ({
+      id: item.id,
+      title: item.title || item.name,
+      posterUrl: item.poster_path ? `${BASE_IMAGE_URL}w500${item.poster_path}` : null,
+      rating: item.vote_average,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch trending media:', error);
+    return [];
   }
 }
