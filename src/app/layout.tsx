@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import AppLayout from '@/components/layout/app-layout';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <SidebarProvider>
             <div className="flex flex-1">
-              {children}
+              <AppLayout>{children}</AppLayout>
             </div>
           </SidebarProvider>
           <Toaster />
