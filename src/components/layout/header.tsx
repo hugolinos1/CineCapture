@@ -1,8 +1,7 @@
-
 'use client';
 
 import Link from 'next/link';
-import { Clapperboard, Film, Search, User, LogOut, Filter } from 'lucide-react';
+import { Clapperboard, Film, Search, User, LogOut, Filter, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth, useUser } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
@@ -25,7 +24,7 @@ export default function Header() {
   const { user, loading } = useUser();
   const { toast } = useToast();
 
-  const handleSignIn = async () => {
+  const handleGoogleSignIn = async () => {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
     try {
@@ -43,6 +42,25 @@ export default function Header() {
       });
     }
   };
+  
+  const handleAnonymousSignIn = async () => {
+    if (!auth) return;
+    try {
+      await signInAnonymously(auth);
+      toast({
+        title: 'Connecté en tant qu\'anonyme',
+        description: 'Vous naviguez en mode invité.',
+      });
+    } catch (error) {
+      console.error("Erreur lors de la connexion anonyme :", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur de connexion',
+        description: 'Impossible de se connecter en mode anonyme.',
+      });
+    }
+  };
+
 
   const handleSignOut = async () => {
     if (!auth) return;
@@ -59,6 +77,11 @@ export default function Header() {
         description: "Impossible de se déconnecter. Veuillez réessayer.",
       });
     }
+  };
+
+  const handleChangeAccount = async () => {
+    await handleSignOut();
+    // No need to call sign-in functions here, user will be presented with sign-in options
   };
 
 
@@ -112,7 +135,7 @@ export default function Header() {
                     <Avatar className="h-8 w-8">
                         <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'Utilisateur'} />
                         <AvatarFallback>
-                        <User />
+                          <User />
                         </AvatarFallback>
                     </Avatar>
                     </Button>
@@ -120,13 +143,17 @@ export default function Header() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                        <p className="text-sm font-medium leading-none">{user.isAnonymous ? 'Utilisateur Anonyme' : user.displayName}</p>
                         <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
+                        {user.isAnonymous ? 'ID: ' + user.uid.substring(0, 8) : user.email}
                         </p>
                     </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleChangeAccount}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Changer de compte</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Se déconnecter</span>
@@ -134,7 +161,24 @@ export default function Header() {
                 </DropdownMenuContent>
                 </DropdownMenu>
             ) : (
-                <Button onClick={handleSignIn}>Se connecter</Button>
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button>
+                      Se connecter
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                     <DropdownMenuItem onClick={handleGoogleSignIn}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Connexion avec Google</span>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem onClick={handleAnonymousSignIn}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Connexion anonyme</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             )}
            </div>
         </div>
