@@ -58,7 +58,6 @@ export default function MediaDetailPage() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Ne rien faire si l'ID n'est pas présent, ou si l'utilisateur ou firestore ne sont pas prêts
     if (!id || !user || !firestore) {
       if (!userLoading) {
         setItemLoading(false);
@@ -67,7 +66,7 @@ export default function MediaDetailPage() {
     }
 
     setItemLoading(true);
-    const docRef = doc(firestore, 'users', user.uid, 'library', id);
+    const docRef = doc(firestore, 'users', user.uid, 'contents', id);
 
     const unsubscribe: Unsubscribe = onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -93,7 +92,7 @@ export default function MediaDetailPage() {
 
   const updateStatus = async (newStatus: MediaStatus) => {
     if (!item || !user || !firestore) return;
-    const docRef = doc(firestore, 'users', user.uid, 'library', id);
+    const docRef = doc(firestore, 'users', user.uid, 'contents', id);
     
     try {
       await updateDoc(docRef, { status: newStatus });
@@ -113,7 +112,7 @@ export default function MediaDetailPage() {
 
   const handleDelete = async () => {
     if (!item || !user || !firestore) return;
-    const docRef = doc(firestore, 'users', user.uid, 'library', id);
+    const docRef = doc(firestore, 'users', user.uid, 'contents', id);
     try {
        await deleteDoc(docRef);
 
@@ -310,3 +309,5 @@ export default function MediaDetailPage() {
     </AppLayout>
   );
 }
+
+    

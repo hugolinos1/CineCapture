@@ -40,18 +40,15 @@ export default function LibraryView() {
   useEffect(() => {
     // Ne rien faire tant que l'utilisateur ou firestore n'est pas chargé
     if (!user || !firestore) {
-      // Si le chargement de l'utilisateur est terminé et qu'il n'y a pas d'utilisateur,
-      // c'est qu'il est déconnecté. On peut arrêter le chargement.
       if (!userLoading) {
         setItemsLoading(false);
-        setItems([]); // Vider les items si l'utilisateur se déconnecte
       }
       return;
     }
 
     setItemsLoading(true);
     const libraryQuery = query(
-      collection(firestore, 'users', user.uid, 'library'),
+      collection(firestore, 'users', user.uid, 'contents'),
       orderBy('addedAt', 'desc')
     );
 
@@ -78,11 +75,10 @@ export default function LibraryView() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [user, firestore, userLoading, toast]);
+  }, [user, firestore, toast, userLoading]);
 
 
   const filteredItems = useMemo(() => {
-    if (!items) return [];
     return items.filter(item => {
       const statusMatch = statusFilter === 'all' || item.status === statusFilter;
       const typeMatch = typeFilter === 'all' || item.type === typeFilter;
@@ -93,7 +89,7 @@ export default function LibraryView() {
   const handleClearLibrary = async () => {
     if (!user || !firestore) return;
     try {
-      const libraryRef = collection(firestore, 'users', user.uid, 'library');
+      const libraryRef = collection(firestore, 'users', user.uid, 'contents');
       const q = query(libraryRef);
       const querySnapshot = await getDocs(q);
       
@@ -251,3 +247,5 @@ export default function LibraryView() {
     </SidebarProvider>
   );
 }
+
+    

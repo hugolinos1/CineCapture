@@ -38,7 +38,7 @@ export default function MovieCard({ item }: MovieCardProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!user) {
+    if (!user || !firestore) {
         toast({
             variant: "destructive",
             title: "Non connecté",
@@ -48,7 +48,7 @@ export default function MovieCard({ item }: MovieCardProps) {
     }
 
     try {
-      const docRef = doc(firestore, 'users', user.uid, 'library', item.id);
+      const docRef = doc(firestore, 'users', user.uid, 'contents', item.id);
       await deleteDoc(docRef);
       toast({
         title: 'Élément supprimé',
@@ -127,3 +127,5 @@ export default function MovieCard({ item }: MovieCardProps) {
     </Card>
   );
 }
+
+    

@@ -76,7 +76,7 @@ export default function UploadDialog() {
   };
 
   const handleAddToLibrary = async () => {
-    if (!state.data || !user) {
+    if (!state.data || !user || !firestore) {
       toast({
           variant: 'destructive',
           title: 'Non connecté',
@@ -90,7 +90,7 @@ export default function UploadDialog() {
     router.push('/library');
 
     try {
-      const libraryRef = collection(firestore, 'users', user.uid, 'library');
+      const libraryRef = collection(firestore, 'users', user.uid, 'contents');
       
       const q = query(libraryRef, where('title', '==', state.data.title.trim()));
       const querySnapshot = await getDocs(q);
@@ -281,3 +281,5 @@ export default function UploadDialog() {
     </>
   );
 }
+
+    
