@@ -262,8 +262,7 @@ function LibraryViewContent() {
             </SidebarGroup>
           </SidebarContent>
         </Sidebar>
-        <main className="flex-1">
-          <div className="container mx-auto p-4 sm:p-6 md:p-8">
+        <main className="flex-1 p-4 sm:p-6 md:p-8">
             <div className="flex items-center justify-between mb-6">
               <div className='flex items-center gap-4'>
                   {isMobile && (
@@ -292,7 +291,7 @@ function LibraryViewContent() {
               </div>
             </div>
             {filteredItems.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredItems.map(item => (
                   <MovieCard key={item.id} item={item} />
                 ))}
@@ -304,9 +303,7 @@ function LibraryViewContent() {
                   <p className="text-muted-foreground">Essayez d'ajuster vos filtres ou d'ajouter de nouveaux films.</p>
               </div>
             )}
-          </div>
         </main>
       </div>
   );
 }
-
