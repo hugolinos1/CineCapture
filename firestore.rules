@@ -1,0 +1,214 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-generated
+ * data, such as content libraries, captures, and notes, is stored within a private data tree
+ * unique to each user. Access is granted only to the authenticated owner of that data tree.
+ *
+ * Data Structure: The data is hierarchically organized under the `/users/{userId}` collection.
+ * This structural segregation ensures that one user's data is completely isolated from another's,
+ * which simplifies security rules and allows for safe and performant list queries within a
+ * user's own data.
+ *
+ * Key Security Decisions:
+ * - User Isolation: A user can only ever read or write data within their own `/users/{userId}` path.
+ * - No User Listing: To protect user privacy and prevent data scraping, listing documents
+ *   in the top-level `/users` collection is explicitly forbidden.
+ * - Public Read-Only Data: The `/genres` collection is public and readable by anyone, but
+ *   cannot be modified by clients. This is suitable for global lookup data.
+ * - Ambiguous Relationships: The `/contentGenres` collection, which links user-specific content
+ *   to public genres, presents a security challenge. Without a clear ownership field (like a
+ *   `userId`) on its documents, it's impossible to securely grant client-side write access.
+ *   Therefore, this collection is locked down completely, defaulting to the most secure posture.
+ *
+ * Denormalization for Authorization: The rules rely on the `userId` field being denormalized
+ * (copied) onto child documents like `Content` and `Capture`. This avoids slow and costly `get()`
+ * calls to parent documents for authorization checks, making the rules more performant and secure.
+ * For example, a rule on a `Capture` document can directly check `resource.data.userId` instead of
+ * fetching the parent `User` document.
+ *
+ * Structural Segregation: User-specific, private data (like a user's movie list) is kept in a
+ * user-owned subcollection (`/users/{userId}/contents`). This is inherently more secure and
+ * performant than a single top-level `/contents` collection that mixes public and private data.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for improved readability and reusability.
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the fundamental check for document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete
+     * operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the incoming document data for a user's root profile
+     * correctly sets the ID, which is critical for relational integrity.
+     */
+    function hasValidUserCreateData(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * Validates that the ID of a user's profile is not being changed on update.
+     */
+    function isUserIdImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * Validates that an incoming Content document has its userId set correctly.
+     */
+    function hasValidContentCreateData(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * Ensures the userId on a Content document cannot be changed after creation.
+     */
+    function isContentOwnerImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * Validates that an incoming Capture document has its userId and contentId set correctly.
+     */
+    function hasValidCaptureCreateData(userId, contentId) {
+      return request.resource.data.userId == userId && request.resource.data.contentId == contentId;
+    }
+
+    /**
+     * Ensures the userId and contentId on a Capture document cannot be changed.
+     */
+    function isCaptureParentLinkImmutable() {
+      return request.resource.data.userId == resource.data.userId && request.resource.data.contentId == resource.data.contentId;
+    }
+
+    /**
+     * Validates that an incoming Note document has its contentId set correctly.
+     */
+    function hasValidNoteCreateData(contentId) {
+      // NOTE: The `Note` entity schema is missing a `userId` field. While the path
+      // `/users/{userId}` provides ownership context, denormalizing `userId` onto the
+      // Note document itself would align better with authorization best practices.
+      return request.resource.data.contentId == contentId;
+    }
+
+    /**
+     * Ensures the contentId on a Note document cannot be changed.
+     */
+    function isNoteParentLinkImmutable() {
+      return request.resource.data.contentId == resource.data.contentId;
+    }
+
+    /**
+     * @description   Rules for the user's own profile document.
+     * @path          /users/{userId}
+     * @allow         A user (auth.uid: 'user123') can (create) their own profile at /users/user123.
+     * @deny          A user (auth.uid: 'user456') cannot (get) or (update) the profile at /users/user123.
+     * @principle     Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isExistingOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && hasValidUserCreateData(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description   Rules for a user's collection of movie/series content.
+       * @path          /users/{userId}/contents/{contentId}
+       * @allow         A user (auth.uid: 'user123') can (create) a new content item in their own collection at /users/user123/contents/movie456.
+       * @deny          A user (auth.uid: 'user456') cannot (list) content items from /users/user123/contents.
+       * @principle     Enforces document ownership for all operations within a user's private subcollection.
+       */
+      match /contents/{contentId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidContentCreateData(userId);
+        allow update: if isExistingOwner(userId) && isContentOwnerImmutable();
+        allow delete: if isExistingOwner(userId);
+
+        /**
+         * @description   Rules for screenshots associated with a specific content item.
+         * @path          /users/{userId}/contents/{contentId}/captures/{captureId}
+         * @allow         A user (auth.uid: 'user123') can (delete) their own capture at /users/user123/contents/movie456/captures/capture789.
+         * @deny          An anonymous user cannot (get) any capture.
+         * @principle     Extends ownership rules to nested subcollections, ensuring data privacy deep in the hierarchy.
+         */
+        match /captures/{captureId} {
+          allow get: if isOwner(userId);
+          allow list: if isOwner(userId);
+          allow create: if isOwner(userId) && hasValidCaptureCreateData(userId, contentId);
+          allow update: if isExistingOwner(userId) && isCaptureParentLinkImmutable();
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
+         * @description   Rules for notes and ratings associated with a specific content item.
+         * @path          /users/{userId}/contents/{contentId}/notes/{noteId}
+         * @allow         A user (auth.uid: 'user123') can (update) their own note at /users/user123/contents/movie456/notes/noteABC.
+         * @deny          A user (auth.uid: 'user456') cannot (create) a note in another user's content folder.
+         * @principle     Maintains strict data ownership for deeply nested user-generated content.
+         */
+        match /notes/{noteId} {
+          allow get: if isOwner(userId);
+          allow list: if isOwner(userId);
+          allow create: if isOwner(userId) && hasValidNoteCreateData(contentId);
+          allow update: if isExistingOwner(userId) && isNoteParentLinkImmutable();
+          allow delete: if isExistingOwner(userId);
+        }
+      }
+    }
+
+    /**
+     * @description   Rules for the global collection of genres.
+     * @path          /genres/{genreId}
+     * @allow         Any user, including unauthenticated ones, can (get) or (list) all genres.
+     * @deny          Any user cannot (create), (update), or (delete) a genre document.
+     * @principle     Provides public read-only access for global, non-sensitive lookup data.
+     */
+    match /genres/{genreId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description   Rules for the content-to-genre relationship links.
+     * @path          /contentGenres/{contentGenreId}
+     * @allow         No operations are permitted from the client.
+     * @deny          A user trying to (create) a link between their content and a genre will be denied.
+     * @principle     Defaults to the most secure posture (fully locked) for collections with an
+     *                ambiguous or insecure ownership model. Client-side modifications are disabled
+     *                to prevent unauthorized creation of relationships. This data should be managed
+     *                by a trusted backend process (e.g., Cloud Functions).
+     */
+    match /contentGenres/{contentGenreId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}

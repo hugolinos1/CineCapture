@@ -1,6 +1,3 @@
-
-// Replace the following with your app's Firebase project configuration
-// See: https://support.google.com/firebase/answer/7015592
 export const firebaseConfig = {
   "projectId": "studio-9567200078-6b0ce",
   "appId": "1:337644145550:web:42a2ef3b5a0ff5a2c272df",
