@@ -16,8 +16,13 @@ import { useFirestore, useUser } from '@/firebase';
 import { collection, query, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 
-function Filters({ allGenres }: { allGenres: string[] }) {
-  const { typeFilter, setTypeFilter, statusFilter, setStatusFilter, genreFilter, setGenreFilter } = useLibraryFilters();
+function Filters({ allGenres, allPlatforms }: { allGenres: string[], allPlatforms: string[] }) {
+  const { 
+    typeFilter, setTypeFilter, 
+    statusFilter, setStatusFilter, 
+    genreFilter, setGenreFilter,
+    platformFilter, setPlatformFilter
+  } = useLibraryFilters();
 
   const handleGenreChange = (genre: string, checked: boolean) => {
     setGenreFilter(prev => 
@@ -69,6 +74,23 @@ function Filters({ allGenres }: { allGenres: string[] }) {
           </div>
         </RadioGroup>
       </div>
+       {allPlatforms.length > 0 && (
+        <div>
+          <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Plateforme</h4>
+          <RadioGroup value={platformFilter} onValueChange={(value) => setPlatformFilter(value)} className="ml-1">
+             <div className="flex items-center space-x-2">
+              <RadioGroupItem value="all" id="platform-all" />
+              <Label htmlFor="platform-all">Toutes</Label>
+            </div>
+            {allPlatforms.map(platform => (
+              <div key={platform} className="flex items-center space-x-2">
+                <RadioGroupItem value={platform} id={`platform-${platform}`} />
+                <Label htmlFor={`platform-${platform}`} className="font-normal capitalize">{platform}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+      )}
       {allGenres.length > 0 && (
         <div>
           <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Genres</h4>
@@ -98,6 +120,8 @@ type LibraryFiltersContextType = {
   setTypeFilter: (type: MediaType | 'all') => void;
   genreFilter: string[];
   setGenreFilter: (genres: string[] | ((prev: string[]) => string[])) => void;
+  platformFilter: string;
+  setPlatformFilter: (platform: string) => void;
 };
 
 const LibraryFiltersContext = React.createContext<LibraryFiltersContextType | undefined>(undefined);
@@ -115,6 +139,8 @@ function LibraryFiltersProvider({ children }: { children: React.ReactNode }) {
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
   const [genreFilter, setGenreFilter] = useState<string[]>([]);
+  const [platformFilter, setPlatformFilter] = useState<string>('all');
+
 
   const value = {
     statusFilter,
@@ -123,6 +149,8 @@ function LibraryFiltersProvider({ children }: { children: React.ReactNode }) {
     setTypeFilter,
     genreFilter,
     setGenreFilter,
+    platformFilter,
+    setPlatformFilter,
   };
 
   return (
@@ -151,7 +179,7 @@ function LibraryViewContent() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [itemsLoading, setItemsLoading] = useState(true);
 
-  const { statusFilter, typeFilter, genreFilter } = useLibraryFilters();
+  const { statusFilter, typeFilter, genreFilter, platformFilter } = useLibraryFilters();
 
   useEffect(() => {
     if (!user || !firestore) {
@@ -197,10 +225,21 @@ function LibraryViewContent() {
     return Array.from(genres).sort();
   }, [items]);
 
+  const allPlatforms = useMemo(() => {
+    const platforms = new Set<string>();
+    items.forEach(item => {
+        if(item.platform) {
+            platforms.add(item.platform);
+        }
+    });
+    return Array.from(platforms).sort();
+  }, [items]);
+
 
   const filteredItems = useMemo(() => {
     const statusMatch = (item: MediaItem) => statusFilter === 'all' || item.status === statusFilter;
     const typeMatch = (item: MediaItem) => typeFilter === 'all' || item.type === typeFilter;
+    const platformMatch = (item: MediaItem) => platformFilter === 'all' || item.platform === platformFilter;
     const genreMatch = (item: MediaItem) => {
       if (genreFilter.length === 0) return true;
       if (!item.genres || item.genres.length === 0) return false;
@@ -208,7 +247,7 @@ function LibraryViewContent() {
     };
     
     return items
-      .filter(item => statusMatch(item) && typeMatch(item) && genreMatch(item))
+      .filter(item => statusMatch(item) && typeMatch(item) && genreMatch(item) && platformMatch(item))
       .sort((a, b) => {
         const ratingA = a.rating ?? -1;
         const ratingB = b.rating ?? -1;
@@ -220,7 +259,7 @@ function LibraryViewContent() {
         const dateB = b.addedAt ? (b.addedAt as any).toDate() : new Date(0);
         return dateB.getTime() - dateA.getTime();
       });
-  }, [items, statusFilter, typeFilter, genreFilter]);
+  }, [items, statusFilter, typeFilter, genreFilter, platformFilter]);
 
   const isLoading = userLoading || itemsLoading;
 
@@ -257,7 +296,7 @@ function LibraryViewContent() {
           <SidebarGroup>
             <SidebarGroupLabel>Filtres</SidebarGroupLabel>
             <div className="px-2">
-               <Filters allGenres={allGenres} />
+               <Filters allGenres={allGenres} allPlatforms={allPlatforms}/>
             </div>
           </SidebarGroup>
         </SidebarContent>
@@ -277,7 +316,7 @@ function LibraryViewContent() {
                         <SheetHeader className='mb-4'>
                             <SheetTitle>Filtres</SheetTitle>
                         </SheetHeader>
-                        <Filters allGenres={allGenres}/>
+                        <Filters allGenres={allGenres} allPlatforms={allPlatforms} />
                       </SheetContent>
                     </Sheet>
                 )}
