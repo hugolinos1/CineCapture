@@ -1,4 +1,3 @@
-import AppLayout from '@/components/layout/app-layout';
 import UploadDialog from '@/components/cine-capture/upload-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import SearchForm from '@/components/cine-capture/search-form';
@@ -7,7 +6,6 @@ import { UploadCloud, Search } from 'lucide-react';
 
 export default function Home() {
   return (
-    <AppLayout>
       <main className="flex-1">
         <section className="w-full py-20 md:py-32 lg:py-40">
           <div className="container px-4 md:px-6">
@@ -51,6 +49,5 @@ export default function Home() {
           </div>
         </section>
       </main>
-    </AppLayout>
   );
 }

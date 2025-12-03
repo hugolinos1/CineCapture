@@ -7,7 +7,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown, LogIn, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import AppLayout from '@/components/layout/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -135,20 +134,17 @@ export default function MediaDetailPage() {
 
   if (isLoading) {
     return (
-      <AppLayout>
         <div className="container mx-auto px-4 py-8 text-center flex justify-center items-center h-full">
             <div className='flex flex-col items-center gap-4 text-muted-foreground'>
               <Loader2 className="w-12 h-12 animate-spin" />
               <p className="text-lg">Chargement des détails...</p>
             </div>
         </div>
-      </AppLayout>
     );
   }
 
   if (!user) {
      return (
-      <AppLayout>
         <main className="container mx-auto px-4 py-8">
            <div className="mb-6">
              <Button asChild variant="outline">
@@ -166,13 +162,11 @@ export default function MediaDetailPage() {
               </AlertDescription>
            </Alert>
         </main>
-      </AppLayout>
     );
   }
 
   if (error || !item) {
     return (
-      <AppLayout>
         <main className="container mx-auto px-4 py-8">
            <div className="mb-6">
              <Button asChild variant="outline">
@@ -187,7 +181,6 @@ export default function MediaDetailPage() {
             <AlertDescription>{error?.message || "L'élément demandé n'a pas été trouvé dans votre bibliothèque."}</AlertDescription>
            </Alert>
         </main>
-      </AppLayout>
     );
   }
 
@@ -196,7 +189,6 @@ export default function MediaDetailPage() {
   const typeLabel = typeLabels[item.type] || 'Contenu';
 
   return (
-    <AppLayout>
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <Button asChild variant="outline">
@@ -306,7 +298,6 @@ export default function MediaDetailPage() {
           </div>
         </Card>
       </main>
-    </AppLayout>
   );
 }
 

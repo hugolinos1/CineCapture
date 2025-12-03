@@ -204,7 +204,7 @@ function LibraryViewContent() {
     const genreMatch = (item: MediaItem) => {
       if (genreFilter.length === 0) return true;
       if (!item.genres || item.genres.length === 0) return false;
-      return genreFilter.some(filterGenre => item.genres.includes(filterGenre));
+      return genreFilter.every(filterGenre => item.genres.includes(filterGenre));
     };
     
     return items
@@ -291,7 +291,7 @@ function LibraryViewContent() {
             </div>
           </div>
           {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {filteredItems.map(item => (
                 <MovieCard key={item.id} item={item} />
               ))}
