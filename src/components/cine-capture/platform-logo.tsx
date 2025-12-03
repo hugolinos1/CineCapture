@@ -3,6 +3,7 @@
 
 import Image from 'next/image';
 import { PLATFORM_LOGOS } from '@/lib/platforms';
+import { cn } from '@/lib/utils';
 
 interface PlatformLogoProps {
   platform?: string;
