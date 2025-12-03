@@ -21,7 +21,8 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    // This runs only on the client, after hydration
+    // This effect runs only on the client, after the component has mounted.
+    // This avoids hydration mismatch errors.
     const isDarkMode = document.documentElement.classList.contains('dark');
     setIsDark(isDarkMode);
   }, []);
@@ -48,8 +49,8 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
       <Image 
         src={logo} 
         alt={`${name} logo`} 
-        width={32} 
-        height={32} 
+        width={100}
+        height={32}
         className={cn(
             "h-full w-auto",
             shouldInvert && 'invert'
