@@ -130,3 +130,6 @@ export async function getTrendingMedia(mediaType: 'movie' | 'tv'): Promise<Trend
     return [];
   }
 }
+
+// Re-export for client components
+export { enrichExtractedMovieDetails };

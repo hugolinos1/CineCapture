@@ -8,13 +8,18 @@ import { Star } from 'lucide-react';
 
 interface TrendingMediaCardProps {
   item: TrendingMedia;
+  onClick?: () => void;
+  className?: string;
 }
 
-export default function TrendingMediaCard({ item }: TrendingMediaCardProps) {
+export default function TrendingMediaCard({ item, onClick, className }: TrendingMediaCardProps) {
   const posterSrc = item.posterUrl || 'https://picsum.photos/seed/placeholder/500/750';
 
   return (
-    <Card className="overflow-hidden group relative aspect-[2/3] border-0 shadow-lg h-full transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-primary/20">
+    <Card 
+      className={`overflow-hidden group relative aspect-[2/3] border-0 shadow-lg h-full transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-primary/20 ${className}`}
+      onClick={onClick}
+    >
       <CardContent className="p-0 h-full">
         <Image
           src={posterSrc}

@@ -7,7 +7,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import TrendingMediaCard from './trending-media-card';
+import TrendingAdderDialog from './trending-adder-dialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { ServerCrash } from 'lucide-react';
 
@@ -47,7 +47,7 @@ export default async function TrendingSection({ title, mediaType }: TrendingSect
         <CarouselContent>
           {items.map((item) => (
             <CarouselItem key={item.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
-              <TrendingMediaCard item={item} />
+              <TrendingAdderDialog item={item} mediaType={mediaType === 'tv' ? 'series' : 'movie'} />
             </CarouselItem>
           ))}
         </CarouselContent>
