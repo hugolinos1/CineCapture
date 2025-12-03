@@ -215,6 +215,7 @@ function LibraryViewContent() {
         if (ratingA !== ratingB) {
           return ratingB - ratingA;
         }
+        // Fallback to date added if ratings are the same or one is missing
         const dateA = a.addedAt ? (a.addedAt as any).toDate() : new Date(0);
         const dateB = b.addedAt ? (b.addedAt as any).toDate() : new Date(0);
         return dateB.getTime() - dateA.getTime();
@@ -290,7 +291,7 @@ function LibraryViewContent() {
              </div>
           </div>
           {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredItems.map(item => (
                 <MovieCard key={item.id} item={item} />
               ))}
