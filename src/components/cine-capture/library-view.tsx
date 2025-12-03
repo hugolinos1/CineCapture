@@ -38,11 +38,13 @@ export default function LibraryView() {
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
 
   useEffect(() => {
+    // Ne rien faire tant que l'utilisateur ou firestore n'est pas chargé
     if (!user || !firestore) {
-      setItems([]);
-      // If user is null but loading is finished, they are logged out.
+      // Si le chargement de l'utilisateur est terminé et qu'il n'y a pas d'utilisateur,
+      // c'est qu'il est déconnecté. On peut arrêter le chargement.
       if (!userLoading) {
         setItemsLoading(false);
+        setItems([]); // Vider les items si l'utilisateur se déconnecte
       }
       return;
     }

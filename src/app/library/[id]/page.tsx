@@ -58,7 +58,8 @@ export default function MediaDetailPage() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!user || !id || !firestore) {
+    // Ne rien faire si l'ID n'est pas présent, ou si l'utilisateur ou firestore ne sont pas prêts
+    if (!id || !user || !firestore) {
       if (!userLoading) {
         setItemLoading(false);
       }
