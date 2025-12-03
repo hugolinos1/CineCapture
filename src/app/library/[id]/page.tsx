@@ -1,10 +1,10 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown, LogIn, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown, LogIn, Loader2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,7 @@ import { useFirestore, useUser, useDoc } from '@/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import PlatformLogo from '@/components/cine-capture/platform-logo';
 import { useRouter, useParams } from 'next/navigation';
+import { refreshMediaItem } from '@/lib/actions';
 
 
 const statusInfo: Record<MediaStatus, { Icon: React.ElementType; label: string; color: string; }> = {
@@ -53,6 +54,7 @@ export default function MediaDetailPage() {
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const docRef = useMemo(() => {
     if (!user || !id) return null;
@@ -98,6 +100,36 @@ export default function MediaDetailPage() {
           description: "Une erreur s'est produite lors de la suppression."
       });
     }
+  };
+
+  const handleRefresh = async () => {
+    if (!item || !user || !docRef) return;
+
+    setIsRefreshing(true);
+    toast({
+      title: 'Rafraîchissement en cours...',
+      description: `Mise à jour des informations pour "${item.title}".`,
+    });
+
+    const result = await refreshMediaItem({
+      docPath: docRef.path,
+      title: item.title,
+      type: item.type,
+    });
+
+    if (result.success) {
+      toast({
+        title: 'Fiche mise à jour !',
+        description: `Les informations pour "${item.title}" ont été rafraîchies.`,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Échec du rafraîchissement',
+        description: result.error,
+      });
+    }
+    setIsRefreshing(false);
   };
   
   const isLoading = isUserLoading || itemLoading;
@@ -188,7 +220,11 @@ export default function MediaDetailPage() {
                       </Badge>
                       <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
                     </div>
-                     <div className="flex items-center gap-4">
+                     <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing}>
+                            {isRefreshing ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+                            <span className="sr-only">Rafraîchir</span>
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="icon">
@@ -266,7 +302,9 @@ export default function MediaDetailPage() {
                 {item.platform && (
                   <div className='space-y-2'>
                       <h3 className="font-semibold text-lg">Disponible sur</h3>
-                      <PlatformLogo platform={item.platform} className="h-8 w-32"/>
+                      <div className="h-8">
+                        <PlatformLogo platform={item.platform} />
+                      </div>
                   </div>
                 )}
               </CardContent>
