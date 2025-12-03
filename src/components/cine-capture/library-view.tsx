@@ -5,29 +5,25 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { Film, PlusCircle, LogIn, Loader2, Filter, Trash2, SortAsc, SortDesc } from 'lucide-react';
+import { Film, PlusCircle, LogIn, Loader2, Filter } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, useSidebar } from '../ui/sidebar';
 import { Button } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, query, orderBy, onSnapshot, type Unsubscribe, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, query, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
-function Filters() {
-  const { typeFilter, setTypeFilter, statusFilter, setStatusFilter } = useLibraryFilters();
+function Filters({ allGenres }: { allGenres: string[] }) {
+  const { typeFilter, setTypeFilter, statusFilter, setStatusFilter, genreFilter, setGenreFilter } = useLibraryFilters();
+
+  const handleGenreChange = (genre: string, checked: boolean) => {
+    setGenreFilter(prev => 
+      checked ? [...prev, genre] : prev.filter(g => g !== genre)
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -73,6 +69,23 @@ function Filters() {
           </div>
         </RadioGroup>
       </div>
+      {allGenres.length > 0 && (
+        <div>
+          <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Genres</h4>
+          <div className="space-y-2 ml-1">
+            {allGenres.map(genre => (
+              <div key={genre} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`genre-${genre}`}
+                  checked={genreFilter.includes(genre)}
+                  onCheckedChange={(checked) => handleGenreChange(genre, !!checked)}
+                />
+                <Label htmlFor={`genre-${genre}`} className="font-normal capitalize">{genre}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -83,6 +96,8 @@ type LibraryFiltersContextType = {
   setStatusFilter: (status: MediaStatus | 'all') => void;
   typeFilter: MediaType | 'all';
   setTypeFilter: (type: MediaType | 'all') => void;
+  genreFilter: string[];
+  setGenreFilter: (genres: string[] | ((prev: string[]) => string[])) => void;
 };
 
 const LibraryFiltersContext = React.createContext<LibraryFiltersContextType | undefined>(undefined);
@@ -99,9 +114,19 @@ const useLibraryFilters = () => {
 function LibraryFiltersProvider({ children }: { children: React.ReactNode }) {
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
+  const [genreFilter, setGenreFilter] = useState<string[]>([]);
+
+  const value = {
+    statusFilter,
+    setStatusFilter,
+    typeFilter,
+    setTypeFilter,
+    genreFilter,
+    setGenreFilter,
+  };
 
   return (
-    <LibraryFiltersContext.Provider value={{ statusFilter, setStatusFilter, typeFilter, setTypeFilter }}>
+    <LibraryFiltersContext.Provider value={value}>
       {children}
     </LibraryFiltersContext.Provider>
   );
@@ -126,7 +151,7 @@ function LibraryViewContent() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [itemsLoading, setItemsLoading] = useState(true);
 
-  const { statusFilter, typeFilter } = useLibraryFilters();
+  const { statusFilter, typeFilter, genreFilter } = useLibraryFilters();
 
   useEffect(() => {
     if (!user || !firestore) {
@@ -164,25 +189,37 @@ function LibraryViewContent() {
     return () => unsubscribe();
   }, [user, firestore, toast, userLoading]);
 
+  const allGenres = useMemo(() => {
+    const genres = new Set<string>();
+    items.forEach(item => {
+      item.genres?.forEach(genre => genres.add(genre));
+    });
+    return Array.from(genres).sort();
+  }, [items]);
+
 
   const filteredItems = useMemo(() => {
     const statusMatch = (item: MediaItem) => statusFilter === 'all' || item.status === statusFilter;
     const typeMatch = (item: MediaItem) => typeFilter === 'all' || item.type === typeFilter;
+    const genreMatch = (item: MediaItem) => {
+      if (genreFilter.length === 0) return true;
+      if (!item.genres || item.genres.length === 0) return false;
+      return genreFilter.some(filterGenre => item.genres.includes(filterGenre));
+    };
     
     return items
-      .filter(item => statusMatch(item) && typeMatch(item))
+      .filter(item => statusMatch(item) && typeMatch(item) && genreMatch(item))
       .sort((a, b) => {
         const ratingA = a.rating ?? -1;
         const ratingB = b.rating ?? -1;
         if (ratingA !== ratingB) {
           return ratingB - ratingA;
         }
-        // Fallback to date added if ratings are equal or both items are unrated
         const dateA = a.addedAt ? (a.addedAt as any).toDate() : new Date(0);
         const dateB = b.addedAt ? (b.addedAt as any).toDate() : new Date(0);
         return dateB.getTime() - dateA.getTime();
       });
-  }, [items, statusFilter, typeFilter]);
+  }, [items, statusFilter, typeFilter, genreFilter]);
 
   const isLoading = userLoading || itemsLoading;
 
@@ -219,7 +256,7 @@ function LibraryViewContent() {
             <SidebarGroup>
               <SidebarGroupLabel>Filtres</SidebarGroupLabel>
               <div className="px-2">
-                 <Filters />
+                 <Filters allGenres={allGenres} />
               </div>
             </SidebarGroup>
           </SidebarContent>
@@ -239,7 +276,7 @@ function LibraryViewContent() {
                          <SheetHeader className='mb-4'>
                             <SheetTitle>Filtres</SheetTitle>
                          </SheetHeader>
-                         <Filters />
+                         <Filters allGenres={allGenres}/>
                       </SheetContent>
                     </Sheet>
                 )}
@@ -261,13 +298,11 @@ function LibraryViewContent() {
           ) : (
             <div className="flex flex-col items-center justify-center text-center h-[50vh] bg-muted/50 rounded-lg">
                 <Film className="w-16 h-16 text-muted-foreground mb-4"/>
-                <h2 className="text-2xl font-bold mb-2">Bibliothèque vide</h2>
-                <p className="text-muted-foreground">Commencez par ajouter un film ou une série.</p>
+                <h2 className="text-2xl font-bold mb-2">Aucun résultat</h2>
+                <p className="text-muted-foreground">Essayez d'ajuster vos filtres ou d'ajouter de nouveaux films.</p>
             </div>
           )}
         </main>
       </div>
   );
 }
-
-    
