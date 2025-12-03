@@ -19,11 +19,12 @@ const platformAssets: Record<string, { src: string; name: string; }> = {
 export default function PlatformLogo({ platform, className }: PlatformLogoProps) {
   if (!platform) return null;
 
-  const assetKey = Object.keys(platformAssets).find(key => platform.toLowerCase().includes(key));
+  const lowerCasePlatform = platform.toLowerCase();
+  const assetKey = Object.keys(platformAssets).find(key => lowerCasePlatform.includes(key));
   
   if (!assetKey) {
     return (
-      <div className="text-xs font-semibold text-white">
+      <div className="text-xs font-semibold text-white flex items-center h-full">
         <span>{platform}</span>
       </div>
     );
@@ -36,9 +37,9 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
       <Image
         src={src}
         alt={`${name} logo`}
-        height={24} // Hauteur fixe pour garantir l'affichage
-        width={100} // Largeur indicative, le style `w-auto` primera
-        className="h-full w-auto" // Permet de conserver le ratio
+        height={28}
+        width={100}
+        className="h-full w-auto"
       />
     </div>
   );
