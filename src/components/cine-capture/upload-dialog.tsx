@@ -116,11 +116,6 @@ export default function UploadDialog() {
       ...state.data,
       userId: user.uid,
       status: 'unwatched', 
-      genres: state.data.genres || [],
-      posterUrl: state.data.posterUrl || '',
-      summary: state.data.summary || '',
-      cast: state.data.cast || [],
-      platform: state.data.platform || '',
       addedAt: serverTimestamp(),
     };
     

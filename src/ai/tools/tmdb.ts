@@ -81,7 +81,7 @@ export const findMediaOnTmdb = ai.defineTool(
       return { source: 'TMDB API (Not configured)' };
     }
 
-    const typeToQuery = input.type === 'movie' ? 'movie' : 'tv';
+    const typeToQuery = (input.type === 'movie') ? 'movie' : 'tv';
     const searchUrl = `https://api.themoviedb.org/3/search/${typeToQuery}?query=${encodeURIComponent(input.title)}&language=fr-FR&page=1&api_key=${TMDB_API_KEY}`;
 
     try {
@@ -116,4 +116,3 @@ export const findMediaOnTmdb = ai.defineTool(
     }
   }
 );
-    
