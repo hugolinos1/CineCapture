@@ -28,8 +28,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFirestore, useUser } from '@/firebase';
-import { doc, updateDoc, deleteDoc, Unsubscribe } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc } from '@/firebase';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import PlatformLogo from '@/components/cine-capture/platform-logo';
 import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -190,7 +190,9 @@ export default function MediaDetailPage() {
                       <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
                     </div>
                      <div className="flex items-center gap-4">
-                        <PlatformLogo platform={item.platform} className="h-8" />
+                        <div className="h-8">
+                          <PlatformLogo platform={item.platform} />
+                        </div>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="icon">

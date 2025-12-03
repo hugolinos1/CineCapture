@@ -96,8 +96,8 @@ export default function MovieCard({ item }: MovieCardProps) {
               data-ai-hint="movie poster"
             />
             {item.platform && (
-              <div className="absolute top-2 left-2 z-10 bg-black/60 p-1 rounded-md">
-                 <PlatformLogo platform={item.platform} className="h-5 w-auto" />
+              <div className="absolute top-2 left-2 z-10 bg-black/60 p-1 rounded-md h-5">
+                 <PlatformLogo platform={item.platform} />
               </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />

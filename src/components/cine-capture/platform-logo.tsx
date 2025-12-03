@@ -33,7 +33,7 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
   const { component: LogoComponent, name, needsInversion } = platformAssets[assetKey];
   
   return (
-    <div className={cn("flex items-center justify-center", className)} title={name}>
+    <div className={cn("flex items-center justify-center h-full", className)} title={name}>
       <LogoComponent className={cn("h-full w-auto", needsInversion && "fill-white")} />
     </div>
   );
