@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 interface PlatformLogoProps {
   platform?: string;
@@ -33,12 +32,13 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
   const { src, name } = platformAssets[assetKey];
   
   return (
-    <div className={cn("relative h-full w-auto", className)} title={name}>
+    <div className={className} title={name}>
       <Image
         src={src}
         alt={`${name} logo`}
-        fill
-        className="object-contain"
+        height={24} // Hauteur fixe pour garantir l'affichage
+        width={100} // Largeur indicative, le style `w-auto` primera
+        className="h-full w-auto" // Permet de conserver le ratio
       />
     </div>
   );
