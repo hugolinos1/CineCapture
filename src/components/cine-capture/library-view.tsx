@@ -5,15 +5,26 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { Film, PlusCircle, LogIn, Loader2, Filter } from 'lucide-react';
+import { Film, PlusCircle, LogIn, Loader2, Filter, Trash2, SortAsc, SortDesc } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, useSidebar } from '../ui/sidebar';
 import { Button } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, query, orderBy, onSnapshot, type Unsubscribe } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, type Unsubscribe, writeBatch, getDocs } from 'firebase/firestore';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function Filters() {
   const { typeFilter, setTypeFilter, statusFilter, setStatusFilter } = useLibraryFilters();
@@ -119,10 +130,8 @@ function LibraryViewContent() {
 
   useEffect(() => {
     if (!user || !firestore) {
-      setItems([]);
-      // We are not loading if there's no user or firestore, so set to false.
-      // The UI will show the login prompt.
       if (!userLoading) {
+        setItems([]);
         setItemsLoading(false);
       }
       return;
@@ -131,8 +140,7 @@ function LibraryViewContent() {
     setItemsLoading(true);
   
     const libraryQuery = query(
-      collection(firestore, 'users', user.uid, 'contents'),
-      orderBy('addedAt', 'desc')
+      collection(firestore, 'users', user.uid, 'contents')
     );
   
     const unsubscribe: Unsubscribe = onSnapshot(
@@ -158,11 +166,22 @@ function LibraryViewContent() {
 
 
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
-      const statusMatch = statusFilter === 'all' || item.status === statusFilter;
-      const typeMatch = typeFilter === 'all' || item.type === typeFilter;
-      return statusMatch && typeMatch;
-    });
+    const statusMatch = (item: MediaItem) => statusFilter === 'all' || item.status === statusFilter;
+    const typeMatch = (item: MediaItem) => typeFilter === 'all' || item.type === typeFilter;
+    
+    return items
+      .filter(item => statusMatch(item) && typeMatch(item))
+      .sort((a, b) => {
+        const ratingA = a.rating ?? -1;
+        const ratingB = b.rating ?? -1;
+        if (ratingA !== ratingB) {
+          return ratingB - ratingA;
+        }
+        // Fallback to date added if ratings are equal or both items are unrated
+        const dateA = a.addedAt ? (a.addedAt as any).toDate() : new Date(0);
+        const dateB = b.addedAt ? (b.addedAt as any).toDate() : new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
   }, [items, statusFilter, typeFilter]);
 
   const isLoading = userLoading || itemsLoading;
@@ -234,7 +253,7 @@ function LibraryViewContent() {
              </div>
           </div>
           {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredItems.map(item => (
                 <MovieCard key={item.id} item={item} />
               ))}
@@ -250,3 +269,5 @@ function LibraryViewContent() {
       </div>
   );
 }
+
+    
