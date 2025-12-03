@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -67,16 +67,14 @@ export default function SignupPage() {
         profileImageUrl: user.photoURL || null,
         isAdmin: false, 
       };
-      batch.set(userDocRef, userDocData);
-
-      // Grant admin role if the email matches
+      
       if (values.email === 'hugues.rabier@gmail.com') {
           const adminRoleRef = doc(firestore, 'roles_admin', user.uid);
           batch.set(adminRoleRef, { grantedAt: new Date().toISOString() });
-          userDocData.isAdmin = true; // Also update the user doc
-          batch.set(userDocRef, userDocData, { merge: true });
+          userDocData.isAdmin = true; 
       }
-
+      
+      batch.set(userDocRef, userDocData);
       await batch.commit();
 
       toast({

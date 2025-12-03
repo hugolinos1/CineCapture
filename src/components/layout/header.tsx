@@ -13,24 +13,56 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth, useUser } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from 'firebase/auth';
+import { useAuth, useUser, useFirestore } from '@/firebase';
+import { GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously, UserCredential } from 'firebase/auth';
+import { doc, setDoc, getDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useRouter } from 'next/navigation';
 
-
 export default function Header() {
   const auth = useAuth();
   const { user, loading } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+
+  const handleUserCreation = async (user: import('firebase/auth').User) => {
+    if (!firestore) return;
+  
+    const userDocRef = doc(firestore, 'users', user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+  
+    if (!userDocSnap.exists()) {
+      const batch = writeBatch(firestore);
+      const username = user.isAnonymous ? 'Utilisateur Anonyme' : user.displayName || user.email?.split('@')[0] || 'Nouvel Utilisateur';
+      
+      const userDocData = {
+        id: user.uid,
+        username: username,
+        email: user.email,
+        registrationDate: serverTimestamp(),
+        profileImageUrl: user.photoURL || null,
+        isAdmin: false,
+      };
+
+      if (user.email === 'hugues.rabier@gmail.com') {
+        const adminRoleRef = doc(firestore, 'roles_admin', user.uid);
+        batch.set(adminRoleRef, { grantedAt: serverTimestamp() });
+        userDocData.isAdmin = true;
+      }
+      
+      batch.set(userDocRef, userDocData);
+      await batch.commit();
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      await handleUserCreation(result.user);
       toast({
         title: 'Connexion réussie',
         description: 'Bienvenue !',
@@ -49,7 +81,8 @@ export default function Header() {
   const handleAnonymousSignIn = async () => {
     if (!auth) return;
     try {
-      await signInAnonymously(auth);
+      const result = await signInAnonymously(auth);
+      await handleUserCreation(result.user);
       toast({
         title: 'Connecté en tant qu\'anonyme',
         description: 'Vous naviguez en mode invité.',
