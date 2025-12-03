@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown, LogIn, Loader2 } from 'lucide-react';
@@ -32,7 +32,7 @@ import { useFirestore, useUser, useDoc } from '@/firebase';
 import { doc, updateDoc, deleteDoc, Unsubscribe } from 'firebase/firestore';
 import PlatformLogo from '@/components/cine-capture/platform-logo';
 import { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 
 const statusInfo: Record<MediaStatus, { Icon: React.ElementType; label: string; color: string; }> = {
@@ -49,7 +49,8 @@ const typeLabels: Record<string, string> = {
 
 export default function MediaDetailPage() {
   const router = useRouter();
-  const { id } = router.query || {};
+  const params = useParams();
+  const id = params.id;
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
