@@ -238,7 +238,7 @@
         }
       },
       {
-        "path": "/users/{userId}/content/{contentId}",
+        "path": "/users/{userId}/contents/{contentId}",
         "definition": {
           "entityName": "Content",
           "schema": {
@@ -258,7 +258,7 @@
         }
       },
       {
-        "path": "/users/{userId}/content/{contentId}/captures/{captureId}",
+        "path": "/users/{userId}/contents/{contentId}/captures/{captureId}",
         "definition": {
           "entityName": "Capture",
           "schema": {
@@ -282,7 +282,7 @@
         }
       },
       {
-        "path": "/users/{userId}/content/{contentId}/notes/{noteId}",
+        "path": "/users/{userId}/contents/{contentId}/notes/{noteId}",
         "definition": {
           "entityName": "Note",
           "schema": {
@@ -354,6 +354,6 @@
         }
       }
     ],
-    "reasoning": "This Firestore structure is designed to support the CineCapture application's core features, focusing on secure user authentication and personalized content libraries. The structure prioritizes authorization independence and efficient data retrieval, especially when listing content.\n\n*   **Users Collection (`/users/{userId}`):** Stores user profiles, including authentication data (email, password hash) and profile information. Path-based ownership ensures that only the authenticated user or an admin can access a user's profile.\n*   **Content Collection (`/users/{userId}/content/{contentId}`):** Each user has their own subcollection of `content`. This structure enforces path-based ownership, ensuring that only the user who owns the content or an admin can access it. This approach guarantees that users can only see their own content library and isolates data silos for each user. There are no authorization dependencies between different users.\n*   **Roles Collection (`/roles_admin/{userId}`):** An administrator role is created using the 'Existence over Content' method for role management. The existence of a document in `/roles_admin/{userId}` grants administrative privileges to the user with the corresponding `userId`. This design enables easy role assignment and verification in security rules without needing to read the document's content.\n\n**Authorization Independence (Strategy A):** The core of the authorization model relies on path-based ownership (`/users/{userId}/content/{contentId}`). This eliminates the need for `get()` calls in security rules, allowing atomic operations and improving rule complexity.\n\n**Structural Segregation (Strategy B):** Data with different access needs are stored in separate collections. User profiles are stored in `/users/{userId}`, ensuring private access, while admin roles are managed in `/roles_admin/{userId}`.  Each user's content is stored in their own subcollection `users/{userId}/content/{contentId}`, ensuring that users only have access to their own content. This simplifies security rules by enforcing consistent access control within each collection.\n\n**Access Modeling (Strategy C):** Path-based ownership (`/users/{userId}/content/{contentId}`) is used for user-owned content. The `userId` in the path directly corresponds to the authenticated user's `uid`, simplifying the rules.  The admin role leverages the 'Existence over Content' pattern.\n\n**QAPs Support:**\n\n*   **Secure List Operations:** The segregation of user data into separate subcollections (`/users/{userId}/content/{contentId}`) allows secure list operations. Security rules can easily verify that the `request.auth.uid` matches the `userId` in the path, ensuring users can only list content they own.\n\nThis structure provides a secure and scalable foundation for the CineCapture application, aligning with the core design principles and strategies outlined in the prompt."
+    "reasoning": "This Firestore structure is designed to support the CineCapture application's core features, focusing on secure user authentication and personalized content libraries. The structure prioritizes authorization independence and efficient data retrieval, especially when listing content.\n\n*   **Users Collection (`/users/{userId}`):** Stores user profiles, including authentication data (email, password hash) and profile information. Path-based ownership ensures that only the authenticated user or an admin can access a user's profile.\n*   **Content Collection (`/users/{userId}/contents/{contentId}`):** Each user has their own subcollection of `contents`. This structure enforces path-based ownership, ensuring that only the user who owns the content or an admin can access it. This approach guarantees that users can only see their own content library and isolates data silos for each user. There are no authorization dependencies between different users.\n*   **Roles Collection (`/roles_admin/{userId}`):** An administrator role is created using the 'Existence over Content' method for role management. The existence of a document in `/roles_admin/{userId}` grants administrative privileges to the user with the corresponding `userId`. This design enables easy role assignment and verification in security rules without needing to read the document's content.\n\n**Authorization Independence (Strategy A):** The core of the authorization model relies on path-based ownership (`/users/{userId}/contents/{contentId}`). This eliminates the need for `get()` calls in security rules, allowing atomic operations and improving rule complexity.\n\n**Structural Segregation (Strategy B):** Data with different access needs are stored in separate collections. User profiles are stored in `/users/{userId}`, ensuring private access, while admin roles are managed in `/roles_admin/{userId}`.  Each user's content is stored in their own subcollection `users/{userId}/contents/{contentId}`, ensuring that users only have access to their own content. This simplifies security rules by enforcing consistent access control within each collection.\n\n**Access Modeling (Strategy C):** Path-based ownership (`/users/{userId}/contents/{contentId}`) is used for user-owned content. The `userId` in the path directly corresponds to the authenticated user's `uid`, simplifying the rules.  The admin role leverages the 'Existence over Content' pattern.\n\n**QAPs Support:**\n\n*   **Secure List Operations:** The segregation of user data into separate subcollections (`/users/{userId}/contents/{contentId}`) allows secure list operations. Security rules can easily verify that the `request.auth.uid` matches the `userId` in the path, ensuring users can only list content they own.\n\nThis structure provides a secure and scalable foundation for the CineCapture application, aligning with the core design principles and strategies outlined in the prompt."
   }
 }
