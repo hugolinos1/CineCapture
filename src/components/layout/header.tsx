@@ -17,8 +17,6 @@ import {
 import { useAuth, useUser } from '@/firebase';
 import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { usePathname } from 'next/navigation';
-import { useSidebar } from '../ui/sidebar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 
@@ -26,10 +24,6 @@ export default function Header() {
   const auth = useAuth();
   const { user, loading } = useUser();
   const { toast } = useToast();
-  const pathname = usePathname();
-  const { isMobile, toggleSidebar } = useSidebar();
-
-  const isLibraryPage = pathname.startsWith('/library');
 
   const handleSignIn = async () => {
     if (!auth) return;
