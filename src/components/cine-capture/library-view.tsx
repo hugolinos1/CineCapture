@@ -266,27 +266,6 @@ function LibraryViewContent() {
                   <PlusCircle className={isMobile ? '' : 'mr-2'} />
                   <span className={isMobile ? 'sr-only' : ''}>Ajouter</span>
                 </Button>
-              {items && items.length > 0 && (
-                   <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size={isMobile ? 'sm' : 'sm'}>
-                            <Trash2 className="mr-0 md:mr-2 h-4 w-4" /> <span className='hidden md:inline'>Vider</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Êtes-vous absolument sûr(e) ?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Cette action est irréversible. Cela supprimera définitivement tous les éléments de votre bibliothèque.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleClearLibrary}>Oui, tout supprimer</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-              )}
              </div>
           </div>
           {filteredItems.length > 0 ? (
