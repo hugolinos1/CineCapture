@@ -66,54 +66,54 @@ service cloud.firestore {
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isOwner(userId) && resource != null && request.resource.data.id == resource.data.id;
       allow delete: if isOwner(userId) && resource != null;
+    }
 
-      /**
-       * @description Manages a user's private collection of content items.
-       * @path /users/{userId}/content/{contentId}
-       * @allow A user creating a new content item in their own library: (create) auth.uid == userId
-       * @allow An admin viewing a user's content: (get, list) isAdmin() == true
-       * @deny A user trying to delete content from another user's library: (delete) auth.uid != userId
-       * @principle Enforces path-based ownership for all nested user data.
-       */
-      match /content/{contentId} {
-        allow get: if isOwner(userId) || isAdmin();
-        allow list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isOwner(userId) && resource != null && request.resource.data.userId == resource.data.userId;
-        allow delete: if isOwner(userId) && resource != null;
+    /**
+     * @description Manages a user's private collection of content items.
+     * @path /users/{userId}/content/{contentId}
+     * @allow A user creating a new content item in their own library: (create) auth.uid == userId
+     * @allow An admin viewing a user's content: (get, list) isAdmin() == true
+     * @deny A user trying to delete content from another user's library: (delete) auth.uid != userId
+     * @principle Enforces path-based ownership for all nested user data.
+     */
+    match /users/{userId}/content/{contentId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && resource != null && request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(userId) && resource != null;
+    }
 
-        /**
-         * @description Manages screenshots uploaded by a user for a specific content item.
-         * @path /users/{userId}/content/{contentId}/captures/{captureId}
-         * @allow A user adding a screenshot to their own content: (create) auth.uid == userId
-         * @allow An admin viewing a user's screenshot: (get, list) isAdmin() == true
-         * @deny A user updating another user's screenshot: (update) auth.uid != userId
-         * @principle Enforces path-based ownership inherited from the parent user document.
-         */
-        match /captures/{captureId} {
-          allow get: if isOwner(userId) || isAdmin();
-          allow list: if isOwner(userId) || isAdmin();
-          allow create: if isOwner(userId) && request.resource.data.userId == userId;
-          allow update: if isOwner(userId) && resource != null && request.resource.data.userId == resource.data.userId;
-          allow delete: if isOwner(userId) && resource != null;
-        }
+    /**
+     * @description Manages screenshots uploaded by a user for a specific content item.
+     * @path /users/{userId}/content/{contentId}/captures/{captureId}
+     * @allow A user adding a screenshot to their own content: (create) auth.uid == userId
+     * @allow An admin viewing a user's screenshot: (get, list) isAdmin() == true
+     * @deny A user updating another user's screenshot: (update) auth.uid != userId
+     * @principle Enforces path-based ownership inherited from the parent user document.
+     */
+    match /users/{userId}/content/{contentId}/captures/{captureId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && resource != null && request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(userId) && resource != null;
+    }
 
-        /**
-         * @description Manages notes created by a user for a specific content item.
-         * @path /users/{userId}/content/{contentId}/notes/{noteId}
-         * @allow A user adding a note to their own content: (create) auth.uid == userId
-         * @allow An admin viewing a user's note: (get, list) isAdmin() == true
-         * @deny A user deleting another user's note: (delete) auth.uid != userId
-         * @principle Enforces path-based ownership inherited from the parent user document.
-         */
-        match /notes/{noteId} {
-          allow get: if isOwner(userId) || isAdmin();
-          allow list: if isOwner(userId) || isAdmin();
-          allow create: if isOwner(userId);
-          allow update: if isOwner(userId) && resource != null;
-          allow delete: if isOwner(userId) && resource != null;
-        }
-      }
+    /**
+     * @description Manages notes created by a user for a specific content item.
+     * @path /users/{userId}/content/{contentId}/notes/{noteId}
+     * @allow A user adding a note to their own content: (create) auth.uid == userId
+     * @allow An admin viewing a user's note: (get, list) isAdmin() == true
+     * @deny A user deleting another user's note: (delete) auth.uid != userId
+     * @principle Enforces path-based ownership inherited from the parent user document.
+     */
+    match /users/{userId}/content/{contentId}/notes/{noteId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
     }
 
     /**
