@@ -15,11 +15,9 @@ import { useRouter } from 'next/navigation';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import PlatformLogo from './platform-logo';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-
 
 const initialState = {
   data: null,
@@ -92,10 +90,15 @@ export default function SearchForm() {
       })
       .catch((error) => {
         console.error("Failed to add to library:", error);
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: libraryRef.path,
+            operation: 'create',
+            requestResourceData: newItem
+        }));
         toast({
           variant: 'destructive',
           title: 'Erreur',
-          description: "Impossible d'ajouter l'élément à la bibliothèque. Vérifiez les permissions.",
+          description: "Impossible d'ajouter l'élément à la bibliothèque.",
         });
       });
   };
@@ -230,3 +233,5 @@ export default function SearchForm() {
     </>
   );
 }
+
+    

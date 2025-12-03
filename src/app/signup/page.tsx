@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -14,7 +15,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -56,20 +57,37 @@ export default function SignupPage() {
       await updateProfile(user, { displayName: values.username });
       
       const userDocRef = doc(firestore, 'users', user.uid);
-      await setDoc(userDocRef, {
+      const userDocData = {
         id: user.uid,
         username: values.username,
         email: user.email,
         registrationDate: new Date().toISOString(),
         profileImageUrl: user.photoURL || null,
         isAdmin: values.email === 'hugues.rabier@gmail.com',
-      });
+      };
       
-      toast({
-        title: 'Compte créé avec succès !',
-        description: `Bienvenue, ${values.username} !`,
-      });
-      router.push('/library');
+      setDoc(userDocRef, userDocData)
+        .then(() => {
+          toast({
+            title: 'Compte créé avec succès !',
+            description: `Bienvenue, ${values.username} !`,
+          });
+          router.push('/library');
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la création du document utilisateur:", error);
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: userDocRef.path,
+              operation: 'create',
+              requestResourceData: userDocData
+          }));
+          toast({
+            variant: 'destructive',
+            title: 'Échec de l\'enregistrement',
+            description: "Votre compte a été créé, mais nous n'avons pas pu enregistrer vos informations de profil.",
+          });
+        });
+
     } catch (error: any) {
       console.error("Erreur lors de la création du compte:", error);
       let description = "Une erreur est survenue. Veuillez réessayer.";
@@ -154,3 +172,5 @@ export default function SignupPage() {
     </main>
   );
 }
+
+    

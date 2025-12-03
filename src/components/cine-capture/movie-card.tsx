@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, deleteDoc } from 'firebase/firestore';
 
 
@@ -48,22 +48,27 @@ export default function MovieCard({ item }: MovieCardProps) {
         return;
     }
 
-    try {
-      const docRef = doc(firestore, 'users', user.uid, 'contents', item.id);
-      await deleteDoc(docRef);
-      toast({
-        title: 'Élément supprimé',
-        description: `"${item.title}" a été retiré de votre bibliothèque.`,
+    const docRef = doc(firestore, 'users', user.uid, 'contents', item.id);
+    deleteDoc(docRef)
+      .then(() => {
+        toast({
+          title: 'Élément supprimé',
+          description: `"${item.title}" a été retiré de votre bibliothèque.`,
+        });
+        setIsDialogOpen(false); // Close the dialog on successful deletion
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la suppression :", error);
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete'
+        }));
+        toast({
+          variant: "destructive",
+          title: 'Erreur',
+          description: "Une erreur est survenue lors de la suppression.",
+        });
       });
-      setIsDialogOpen(false); // Close the dialog on successful deletion
-    } catch (error) {
-      console.error("Erreur lors de la suppression :", error);
-      toast({
-        variant: "destructive",
-        title: 'Erreur',
-        description: "Une erreur est survenue lors de la suppression.",
-      });
-    }
   };
 
   const handleTriggerClick = (e: React.MouseEvent) => {
@@ -128,3 +133,5 @@ export default function MovieCard({ item }: MovieCardProps) {
     </Card>
   );
 }
+
+    

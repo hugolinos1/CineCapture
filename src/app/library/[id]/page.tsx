@@ -28,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFirestore, useUser, useDoc } from '@/firebase';
+import { useFirestore, useUser, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import PlatformLogo from '@/components/cine-capture/platform-logo';
 import { useRouter, useParams } from 'next/navigation';
@@ -66,40 +66,51 @@ export default function MediaDetailPage() {
   const updateStatus = async (newStatus: MediaStatus) => {
     if (!item || !user || !firestore || !docRef) return;
     
-    try {
-      await updateDoc(docRef, { status: newStatus });
-      toast({
-        title: 'Statut mis à jour',
-        description: `Le statut de "${item.title}" est maintenant "${statusInfo[newStatus].label}".`,
+    const updatedData = { status: newStatus };
+    updateDoc(docRef, updatedData)
+      .then(() => {
+        toast({
+          title: 'Statut mis à jour',
+          description: `Le statut de "${item.title}" est maintenant "${statusInfo[newStatus].label}".`,
+        });
+      })
+      .catch((e) => {
+        console.error("Erreur lors de la mise à jour du statut:", e);
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'update',
+            requestResourceData: updatedData
+        }));
+        toast({
+          variant: "destructive",
+          title: 'Erreur',
+          description: "Une erreur s'est produite lors de la mise à jour."
+        });
       });
-    } catch (e) {
-      console.error("Erreur lors de la mise à jour du statut:", e);
-      toast({
-        variant: "destructive",
-        title: 'Erreur',
-        description: "Une erreur s'est produite lors de la mise à jour."
-      });
-    }
   };
 
   const handleDelete = async () => {
     if (!item || !user || !firestore || !docRef) return;
-    try {
-       await deleteDoc(docRef);
-
-      toast({
-        title: 'Élément supprimé',
-        description: `"${item.title}" a été supprimé de votre bibliothèque.`,
+    deleteDoc(docRef)
+      .then(() => {
+        toast({
+          title: 'Élément supprimé',
+          description: `"${item.title}" a été supprimé de votre bibliothèque.`,
+        });
+        router.push('/library');
+      })
+      .catch((e) => {
+        console.error("Erreur lors de la suppression de l'élément:", e);
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete'
+        }));
+        toast({
+            variant: "destructive",
+            title: 'Erreur',
+            description: "Une erreur s'est produite lors de la suppression."
+        });
       });
-      router.push('/library');
-    } catch (e) {
-      console.error("Erreur lors de la suppression de l'élément:", e);
-      toast({
-          variant: "destructive",
-          title: 'Erreur',
-          description: "Une erreur s'est produite lors de la suppression."
-      });
-    }
   };
 
   const handleRefresh = async () => {
@@ -117,28 +128,36 @@ export default function MediaDetailPage() {
     });
   
     if (result.success && result.data) {
-      try {
-        await updateDoc(docRef, {
-            summary: result.data.summary,
-            posterUrl: result.data.posterUrl,
-            cast: result.data.cast,
-            rating: result.data.rating,
-            genres: result.data.genres,
-            platform: result.data.platform,
-            source: result.data.source,
+      const updatedData = {
+          summary: result.data.summary,
+          posterUrl: result.data.posterUrl,
+          cast: result.data.cast,
+          rating: result.data.rating,
+          genres: result.data.genres,
+          platform: result.data.platform,
+          source: result.data.source,
+      };
+
+      updateDoc(docRef, updatedData)
+        .then(() => {
+          toast({
+            title: 'Fiche mise à jour !',
+            description: `Les informations pour "${item.title}" ont été rafraîchies.`,
+          });
+        })
+        .catch((e) => {
+          console.error("Erreur lors de la mise à jour de la base de données:", e);
+           errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: docRef.path,
+              operation: 'update',
+              requestResourceData: updatedData
+          }));
+          toast({
+            variant: 'destructive',
+            title: 'Échec de la mise à jour',
+            description: 'Impossible d\'enregistrer les nouvelles informations.',
+          });
         });
-        toast({
-          title: 'Fiche mise à jour !',
-          description: `Les informations pour "${item.title}" ont été rafraîchies.`,
-        });
-      } catch (e) {
-        console.error("Erreur lors de la mise à jour de la base de données:", e);
-        toast({
-          variant: 'destructive',
-          title: 'Échec de la mise à jour',
-          description: 'Impossible d\'enregistrer les nouvelles informations.',
-        });
-      }
     } else {
       toast({
         variant: 'destructive',
@@ -331,3 +350,5 @@ export default function MediaDetailPage() {
       </main>
   );
 }
+
+    

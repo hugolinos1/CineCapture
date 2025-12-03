@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import PlatformLogo from './platform-logo';
 import TrendingMediaCard from './trending-media-card';
@@ -99,20 +99,35 @@ export default function TrendingAdderDialog({ item, mediaType }: TrendingAdderDi
                 addedAt: serverTimestamp(),
             };
 
-            await addDoc(libraryRef, newItem);
-            toast({
-                title: 'Ajouté à la bibliothèque !',
-                description: `${newItem.title} a été ajouté à votre collection.`,
-            });
-            setIsDialogOpen(false);
-            router.push('/library');
+            addDoc(libraryRef, newItem)
+              .then(() => {
+                toast({
+                    title: 'Ajouté à la bibliothèque !',
+                    description: `${newItem.title} a été ajouté à votre collection.`,
+                });
+                setIsDialogOpen(false);
+                router.push('/library');
+              })
+              .catch((error) => {
+                console.error("Failed to add to library:", error);
+                 errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: libraryRef.path,
+                    operation: 'create',
+                    requestResourceData: newItem
+                }));
+                toast({
+                    variant: 'destructive',
+                    title: 'Erreur',
+                    description: "Impossible d'ajouter l'élément.",
+                });
+              });
 
         } catch (error) {
-            console.error("Failed to add to library:", error);
+            console.error("Failed to query library:", error);
             toast({
                 variant: 'destructive',
                 title: 'Erreur',
-                description: "Impossible d'ajouter l'élément. Vérifiez les permissions Firestore.",
+                description: "Impossible de vérifier votre bibliothèque. Vérifiez les permissions Firestore.",
             });
         }
     };
@@ -217,3 +232,5 @@ export default function TrendingAdderDialog({ item, mediaType }: TrendingAdderDi
         </>
     );
 }
+
+    
