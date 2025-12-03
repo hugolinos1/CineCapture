@@ -30,9 +30,7 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
 
   return (
     <div className={className} title={name}>
-      <Image src={logo} alt={`${name} logo`} width={24} height={24} className="h-full w-auto" />
+      <Image src={logo} alt={`${name} logo`} width={24} height={24} className="h-full w-auto invert" />
     </div>
   );
 }
-
-    
