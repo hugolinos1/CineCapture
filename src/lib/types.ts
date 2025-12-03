@@ -18,6 +18,9 @@ export interface MediaItem {
   userNotes?: string;
   genres: string[];
   addedAt: Date;
+  platform?: string;
 }
 
 export type EnrichedMovieDetails = EnrichExtractedMovieDetailsOutput;
+
+    

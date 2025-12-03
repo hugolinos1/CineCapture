@@ -2,18 +2,18 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useActionState } from 'react';
-import { UploadCloud, Loader2, Star, Users, FileText, X, Film, Tv, LogIn } from 'lucide-react';
+import { UploadCloud, Loader2, Star, Users, FileText, X, Tv, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import { processScreenshot } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import type { MediaItem } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+import PlatformLogo from './platform-logo';
 
 
 const initialState = {
@@ -118,6 +118,7 @@ export default function UploadDialog() {
       posterUrl: state.data.posterUrl || '',
       summary: state.data.summary || '',
       cast: state.data.cast || [],
+      platform: state.data.platform || '',
       addedAt: serverTimestamp(),
     };
     
@@ -245,10 +246,13 @@ export default function UploadDialog() {
                   />
                 </div>
                 <div className="p-6 space-y-4">
-                  <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
-                    {result.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />}
-                    {typeLabels[result.type] || 'Contenu'}
-                  </Badge>
+                  <div className="flex justify-between items-start">
+                    <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
+                      <Tv className="mr-2 h-4 w-4" />
+                      {typeLabels[result.type] || 'Contenu'}
+                    </Badge>
+                    {result.platform && <PlatformLogo platform={result.platform} className="h-6" />}
+                  </div>
                   <h2 className="text-3xl font-bold font-headline text-primary-foreground">{result.title}</h2>
                   
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -295,3 +299,5 @@ export default function UploadDialog() {
     </>
   );
 }
+
+    

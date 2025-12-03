@@ -27,6 +27,7 @@ const EnrichExtractedMovieDetailsOutputSchema = z.object({
   cast: z.array(z.string()).describe('Liste des principaux acteurs.'),
   rating: z.number().optional().describe('La note du film, si disponible.'),
   genres: z.array(z.string()).optional().describe('La liste des genres du film ou de la série.'),
+  platform: z.string().optional().describe('La plateforme de streaming principale où le contenu est disponible (ex: Netflix, Prime Video).'),
   source: z.string().optional().describe('La source utilisée pour récupérer les informations.'),
 });
 
@@ -53,16 +54,16 @@ const enrichExtractedMovieDetailsPrompt = ai.definePrompt({
   Résumé initial: {{{summary}}}
   
   Marche à suivre:
-  1.  Utilisez l'outil 'findMediaOnTmdb' fourni pour obtenir les informations structurées, y compris l'URL de l'affiche et la note.
+  1.  Utilisez l'outil 'findMediaOnTmdb' fourni pour obtenir les informations structurées, y compris l'URL de l'affiche, la note et la plateforme de diffusion.
   2.  À partir des informations de l'outil et de vos connaissances, générez les informations complémentaires suivantes :
       - Un synopsis détaillé et engageant en français.
       - La distribution principale (5-10 acteurs principaux).
       - La liste complète des genres, en français.
   3.  Assurez-vous que le titre et le type correspondent à l'entrée.
-  4.  Renseignez le champ 'source', 'posterUrl' et 'rating' avec les valeurs retournées par l'outil.
+  4.  Renseignez les champs 'source', 'posterUrl', 'rating' et 'platform' avec les valeurs retournées par l'outil.
   
   RÈGLES CRITIQUES:
-  - Les champs 'posterUrl' et 'rating' DOIVENT provenir exclusivement du résultat de l'outil 'findMediaOnTmdb'. Ne les inventez jamais.
+  - Les champs 'posterUrl', 'rating' et 'platform' DOIVENT provenir exclusivement du résultat de l'outil 'findMediaOnTmdb'. Ne les inventez jamais.
   - Si l'outil ne retourne pas de valeur pour ces champs, laissez-les vides.
 
   Retournez toutes les informations au format JSON.`,
@@ -99,3 +100,5 @@ const enrichExtractedMovieDetailsFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    

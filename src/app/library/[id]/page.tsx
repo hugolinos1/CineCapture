@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc, deleteDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
+import PlatformLogo from '@/components/cine-capture/platform-logo';
 
 const statusInfo: Record<MediaStatus, { Icon: React.ElementType; label: string; color: string; }> = {
   watched: { Icon: CheckCircle, label: 'Vu', color: 'text-green-400' },
@@ -185,8 +186,6 @@ export default function MediaDetailPage() {
   }
 
   const { Icon: StatusIcon, label: statusLabel, color: statusColor } = statusInfo[item.status];
-  const typeIcon = item.type === 'movie' ? <Film className="mr-2 h-4 w-4" /> : <Tv className="mr-2 h-4 w-4" />;
-  const typeLabel = typeLabels[item.type] || 'Contenu';
 
   return (
       <main className="container mx-auto px-4 py-8">
@@ -220,26 +219,29 @@ export default function MediaDetailPage() {
                       </Badge>
                       <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
                     </div>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon">
-                          <Trash2 />
-                          <span className="sr-only">Supprimer</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Cette action est irréversible. Cela supprimera définitivement "{item.title}" de votre bibliothèque.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDelete}>Supprimer</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                     <div className="flex items-center gap-4">
+                        {item.platform && <PlatformLogo platform={item.platform} className="h-8" />}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon">
+                              <Trash2 />
+                              <span className="sr-only">Supprimer</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action est irréversible. Cela supprimera définitivement "{item.title}" de votre bibliothèque.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleDelete}>Supprimer</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                   </div>
                 </div>
 
@@ -301,4 +303,5 @@ export default function MediaDetailPage() {
   );
 }
 
+    
     

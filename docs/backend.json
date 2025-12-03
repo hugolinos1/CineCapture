@@ -82,6 +82,10 @@
           "type": "string",
           "description": "Date the content was added to the user's library.",
           "format": "date-time"
+        },
+        "platform": {
+          "type": "string",
+          "description": "The streaming platform where the content is available (e.g., Netflix, Prime Video)."
         }
       },
       "required": [
@@ -329,3 +333,4 @@
     "reasoning": "The Firestore data structure is designed to support CineCapture's core features: screenshot analysis, metadata enrichment, personal library management, and a Netflix-like interface. The structure prioritizes authorization independence using denormalization and structural segregation to ensure secure and scalable data access. User-specific data is stored in hierarchical paths under the `/users/{userId}` collection, enabling efficient and secure user-based data retrieval. Content, captures, and notes are all organized under the user's document to establish clear ownership and simplify security rules.\n\nAuthorization Independence is achieved by denormalizing the `userId` into the `Content`, `Capture`, and `Note` documents. This allows security rules to validate the user's ownership without needing to perform `get()` operations on parent documents. This is crucial for maintaining atomicity in transactions and batches.\n\nThe structure supports the QAPs (Rules are not Filters) principle. Each collection contains documents with a homogeneous security posture, making `list` operations secure. Path-based ownership (`/users/{userId}/contents/{contentId}`) ensures only the authenticated user can access their own content, captures, and notes. Additionally, global roles are not needed as authorization is derived from `request.auth.uid` and `userId` on the documents."
   }
 }
+    

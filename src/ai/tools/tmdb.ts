@@ -7,6 +7,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
+const BASE_IMAGE_URL = 'https://image.tmdb.org/t/p/';
 
 const TmdbSearchInputSchema = z.object({
   title: z.string().describe('The title of the media to search for.'),
@@ -18,12 +19,43 @@ const TmdbSearchOutputSchema = z.object({
   posterUrl: z.string().optional(),
   source: z.string().optional(),
   rating: z.number().optional(),
+  platform: z.string().optional().describe('The primary streaming platform in France (e.g., Netflix, Prime Video).'),
 });
+
+async function getWatchProvider(mediaId: number, type: 'movie' | 'tv'): Promise<string | undefined> {
+    if (!TMDB_API_KEY) return undefined;
+
+    const url = `https://api.themoviedb.org/3/${type}/${mediaId}/watch/providers?api_key=${TMDB_API_KEY}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) return undefined;
+        
+        const data = await response.json();
+        const providers = data.results?.FR?.flatrate;
+
+        // Prioritize major platforms
+        if (providers && providers.length > 0) {
+            const priority = ['Netflix', 'Amazon Prime Video', 'Disney Plus', 'Apple TV Plus', 'Canal+'];
+            for (const pName of priority) {
+                if (providers.some((p: any) => p.provider_name.includes(pName))) {
+                    return pName;
+                }
+            }
+            // Return the first available if no priority match
+            return providers[0].provider_name;
+        }
+        return undefined;
+
+    } catch (error) {
+        console.error('Error fetching watch providers:', error);
+        return undefined;
+    }
+}
 
 export const findMediaOnTmdb = ai.defineTool(
   {
     name: 'findMediaOnTmdb',
-    description: 'Finds a movie or TV series on The Movie Database (TMDB) and returns its details, including a poster URL and rating.',
+    description: 'Finds a movie or TV series on The Movie Database (TMDB) and returns its details, including poster URL, rating, and primary streaming platform in France.',
     inputSchema: TmdbSearchInputSchema,
     outputSchema: TmdbSearchOutputSchema,
   },
@@ -34,31 +66,29 @@ export const findMediaOnTmdb = ai.defineTool(
     }
 
     const typeToQuery = input.type === 'movie' ? 'movie' : 'tv';
-    const url = `https://api.themoviedb.org/3/search/${typeToQuery}?query=${encodeURIComponent(input.title)}&language=fr-FR&page=1&api_key=${TMDB_API_KEY}`;
+    const searchUrl = `https://api.themoviedb.org/3/search/${typeToQuery}?query=${encodeURIComponent(input.title)}&language=fr-FR&page=1&api_key=${TMDB_API_KEY}`;
 
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const searchResponse = await fetch(searchUrl);
 
-      if (!response.ok) {
-        console.error(`TMDB API request failed with status: ${response.status}`);
-        return { source: `TMDB API (Request Failed ${response.status})` };
+      if (!searchResponse.ok) {
+        console.error(`TMDB API search request failed with status: ${searchResponse.status}`);
+        return { source: `TMDB API (Request Failed ${searchResponse.status})` };
       }
 
-      const data = await response.json();
+      const searchData = await searchResponse.json();
 
-      if (data.results && data.results.length > 0) {
-        const bestMatch = data.results[0];
+      if (searchData.results && searchData.results.length > 0) {
+        const bestMatch = searchData.results[0];
         const posterPath = bestMatch.poster_path;
         
+        const platform = await getWatchProvider(bestMatch.id, typeToQuery);
+
         return {
           title: bestMatch.title || bestMatch.name,
-          posterUrl: posterPath ? `https://image.tmdb.org/t/p/w780${posterPath}` : '',
+          posterUrl: posterPath ? `${BASE_IMAGE_URL}w780${posterPath}` : '',
           rating: bestMatch.vote_average,
+          platform: platform,
           source: 'TMDB API',
         };
       } else {
@@ -70,3 +100,5 @@ export const findMediaOnTmdb = ai.defineTool(
     }
   }
 );
+
+    

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useActionState } from 'react';
-import { Loader2, Star, Users, FileText, Film, Tv, LogIn } from 'lucide-react';
+import { Loader2, Star, Users, FileText, Tv, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import { processTextSearch } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import PlatformLogo from './platform-logo';
 
 
 const initialState = {
@@ -81,6 +82,7 @@ export default function SearchForm() {
       posterUrl: state.data.posterUrl || '',
       summary: state.data.summary || '',
       cast: state.data.cast || [],
+      platform: state.data.platform || '',
       addedAt: serverTimestamp(),
     };
     
@@ -184,10 +186,13 @@ export default function SearchForm() {
                   />
                 </div>
                 <div className="p-6 space-y-4">
-                  <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
-                    <Tv className="mr-2 h-4 w-4" />
-                    {typeLabels[result.type] || 'Contenu'}
-                  </Badge>
+                  <div className="flex justify-between items-start">
+                    <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
+                      <Tv className="mr-2 h-4 w-4" />
+                      {typeLabels[result.type] || 'Contenu'}
+                    </Badge>
+                    {result.platform && <PlatformLogo platform={result.platform} className="h-6" />}
+                  </div>
                   <h2 className="text-3xl font-bold font-headline text-primary-foreground">{result.title}</h2>
                   
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -234,3 +239,5 @@ export default function SearchForm() {
     </>
   );
 }
+
+    
