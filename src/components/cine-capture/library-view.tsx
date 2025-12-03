@@ -129,20 +129,19 @@ function LibraryViewContent() {
   const { statusFilter, typeFilter } = useLibraryFilters();
 
   useEffect(() => {
-    setItemsLoading(true);
     if (!user || !firestore) {
       setItems([]);
-      if (!userLoading) {
-        setItemsLoading(false);
-      }
+      setItemsLoading(!userLoading);
       return;
     }
-
+  
+    setItemsLoading(true);
+  
     const libraryQuery = query(
       collection(firestore, 'users', user.uid, 'contents'),
       orderBy('addedAt', 'desc')
     );
-
+  
     const unsubscribe: Unsubscribe = onSnapshot(
       libraryQuery,
       (snapshot) => {
@@ -160,7 +159,7 @@ function LibraryViewContent() {
         setItemsLoading(false);
       }
     );
-
+  
     return () => unsubscribe();
   }, [user, firestore, toast, userLoading]);
 
@@ -291,7 +290,7 @@ function LibraryViewContent() {
              </div>
           </div>
           {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
               {filteredItems.map(item => (
                 <MovieCard key={item.id} item={item} />
               ))}
