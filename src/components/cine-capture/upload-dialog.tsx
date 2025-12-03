@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -251,7 +252,9 @@ export default function UploadDialog() {
                       <Tv className="mr-2 h-4 w-4" />
                       {typeLabels[result.type] || 'Contenu'}
                     </Badge>
-                    {result.platform && <div className="h-6"><PlatformLogo platform={result.platform} /></div>}
+                    <div className="h-6 flex items-center">
+                        <PlatformLogo platform={result.platform} className="h-5 w-auto" />
+                    </div>
                   </div>
                   <h2 className="text-3xl font-bold font-headline text-primary-foreground">{result.title}</h2>
                   
@@ -299,3 +302,5 @@ export default function UploadDialog() {
     </>
   );
 }
+
+    

@@ -1,46 +1,50 @@
+
 'use client';
 
-import Image from 'next/image';
+import {
+  NetflixIcon,
+  PrimeVideoIcon,
+  DisneyPlusIcon,
+  AppleTvPlusIcon,
+  CanalPlusIcon,
+} from './platform-icons';
 
 interface PlatformLogoProps {
   platform?: string;
   className?: string;
 }
 
-const platformAssets: Record<string, { src: string; name: string; }> = {
-  'netflix': { src: '/logos/netflix.svg', name: 'Netflix' },
-  'amazon prime video': { src: '/logos/prime-video.svg', name: 'Prime Video' },
-  'prime video': { src: '/logos/prime-video.svg', name: 'Prime Video' },
-  'disney plus': { src: '/logos/disney-plus.svg', name: 'Disney+' },
-  'apple tv plus': { src: '/logos/apple-tv-plus-white.svg', name: 'Apple TV+' },
-  'canal+': { src: '/logos/canal-plus-white.svg', name: 'Canal+' },
-};
-
+// This component is now simplified. It just selects the right icon
+// and applies the necessary classes for size and color.
 export default function PlatformLogo({ platform, className }: PlatformLogoProps) {
   if (!platform) return null;
 
   const lowerCasePlatform = platform.toLowerCase();
-  const assetKey = Object.keys(platformAssets).find(key => lowerCasePlatform.includes(key));
   
-  if (!assetKey) {
-    return (
-      <div className="text-xs font-semibold text-white flex items-center h-full">
-        <span>{platform}</span>
-      </div>
-    );
+  if (lowerCasePlatform.includes('netflix')) {
+    return <NetflixIcon className={className} />;
+  }
+  if (lowerCasePlatform.includes('prime video') || lowerCasePlatform.includes('amazon')) {
+    return <PrimeVideoIcon className={className} />;
+  }
+  if (lowerCasePlatform.includes('disney plus')) {
+    return <DisneyPlusIcon className={className} />;
+  }
+  // For Apple and Canal+, we apply text-white to make them visible on the dark theme.
+  // Their SVG `fill` is set to `currentColor`.
+  if (lowerCasePlatform.includes('apple tv plus')) {
+    return <AppleTvPlusIcon className={`${className} text-white`} />;
+  }
+  if (lowerCasePlatform.includes('canal+')) {
+    return <CanalPlusIcon className={`${className} text-white`} />;
   }
 
-  const { src, name } = platformAssets[assetKey];
-  
+  // Fallback to displaying the text if no logo is found
   return (
-    <div className={className} title={name}>
-      <Image
-        src={src}
-        alt={`${name} logo`}
-        height={28}
-        width={100}
-        className="h-full w-auto"
-      />
+    <div className="text-xs font-semibold text-white flex items-center h-full">
+      <span>{platform}</span>
     </div>
   );
 }
+
+    

@@ -189,8 +189,8 @@ export default function MediaDetailPage() {
                       <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
                     </div>
                      <div className="flex items-center gap-4">
-                        <div className="h-7">
-                            <PlatformLogo platform={item.platform} />
+                        <div className="h-8 flex items-center">
+                            <PlatformLogo platform={item.platform} className="h-6 w-auto" />
                         </div>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -273,3 +273,5 @@ export default function MediaDetailPage() {
       </main>
   );
 }
+
+    
