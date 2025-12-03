@@ -23,10 +23,9 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
   }
 
   if (!logoInfo) {
-    // Fallback to displaying the text if no logo is found
     return (
-      <div className="text-sm font-semibold text-white">
-        <span>{platform}</span>
+      <div className="flex items-center h-full">
+        <span className="text-sm font-semibold text-white">{platform}</span>
       </div>
     );
   }
@@ -36,17 +35,16 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
     imageStyle.filter = 'invert(1)';
   }
   
-  // For PNG, we need to provide width and height. For SVG, we can often rely on viewBox.
-  // But to be safe, we provide dimensions for all.
   return (
-    <div className={className} style={{ position: 'relative' }}>
+    <div className={cn("relative h-full w-auto", className)}>
       <Image
         src={logoInfo.url}
         alt={`${platform} logo`}
         fill
-        className="object-contain"
+        sizes="100px"
+        className="object-contain object-left"
         style={imageStyle}
-        unoptimized // Important for SVGs, also avoids issues with some PNGs
+        unoptimized
       />
     </div>
   );
