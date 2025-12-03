@@ -26,7 +26,6 @@ export default function UploadDialog() {
   const [state, formAction, isPending] = useActionState(processScreenshot, initialState);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [isResultOpen, setIsResultOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
@@ -51,6 +50,9 @@ export default function UploadDialog() {
     if (!file) {
       setPreview(null);
       setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
     setSelectedFile(file);
@@ -71,7 +73,14 @@ export default function UploadDialog() {
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    handleFileSelect(e.dataTransfer.files?.[0] || null);
+    const file = e.dataTransfer.files?.[0] || null;
+    if (file && fileInputRef.current) {
+        // Create a new FileList object to assign to the input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInputRef.current.files = dataTransfer.files;
+    }
+    handleFileSelect(file);
   };
 
   const handleAddToLibrary = async () => {
