@@ -1,8 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Clock, Film, FileText, PlayCircle, Star, Trash2, Tv, Users, ChevronsUpDown, LogIn, Loader2 } from 'lucide-react';
@@ -29,9 +28,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFirestore, useUser } from '@/firebase';
-import { doc, updateDoc, deleteDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc } from '@/firebase';
+import { doc, updateDoc, deleteDoc, Unsubscribe } from 'firebase/firestore';
 import PlatformLogo from '@/components/cine-capture/platform-logo';
+import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+
 
 const statusInfo: Record<MediaStatus, { Icon: React.ElementType; label: string; color: string; }> = {
   watched: { Icon: CheckCircle, label: 'Vu', color: 'text-green-400' },
@@ -46,53 +48,21 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function MediaDetailPage() {
-  const params = useParams();
   const router = useRouter();
+  const { id } = router.query || {};
   const { toast } = useToast();
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const id = params.id as string;
 
-  const [item, setItem] = useState<MediaItem | null>(null);
-  const [itemLoading, setItemLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const docRef = useMemo(() => {
+    if (!user || !id) return null;
+    return doc(firestore, 'users', user.uid, 'contents', id as string);
+  }, [user, id, firestore]);
 
-  useEffect(() => {
-    if (!id || !user || !firestore) {
-      if (!userLoading) {
-        setItemLoading(false);
-      }
-      return;
-    }
-
-    setItemLoading(true);
-    const docRef = doc(firestore, 'users', user.uid, 'contents', id);
-
-    const unsubscribe: Unsubscribe = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          setItem({ id: docSnap.id, ...docSnap.data() } as MediaItem);
-          setError(null);
-        } else {
-          setItem(null);
-          setError(new Error("L'élément demandé n'a pas été trouvé dans votre bibliothèque."));
-        }
-        setItemLoading(false);
-      },
-      (err) => {
-        console.error(`Error fetching document ${docRef.path}:`, err);
-        setError(err);
-        setItem(null);
-        setItemLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user, id, firestore, userLoading]);
-
+  const { data: item, isLoading: itemLoading, error } = useDoc<MediaItem>(docRef);
 
   const updateStatus = async (newStatus: MediaStatus) => {
-    if (!item || !user || !firestore) return;
-    const docRef = doc(firestore, 'users', user.uid, 'contents', id);
+    if (!item || !user || !firestore || !docRef) return;
     
     try {
       await updateDoc(docRef, { status: newStatus });
@@ -111,8 +81,7 @@ export default function MediaDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!item || !user || !firestore) return;
-    const docRef = doc(firestore, 'users', user.uid, 'contents', id);
+    if (!item || !user || !firestore || !docRef) return;
     try {
        await deleteDoc(docRef);
 
@@ -131,11 +100,11 @@ export default function MediaDetailPage() {
     }
   };
   
-  const isLoading = userLoading || itemLoading;
+  const isLoading = isUserLoading || itemLoading;
 
   if (isLoading) {
     return (
-        <div className="container mx-auto px-4 py-8 text-center flex justify-center items-center h-full">
+        <div className="flex-1 p-8 flex justify-center items-center h-full">
             <div className='flex flex-col items-center gap-4 text-muted-foreground'>
               <Loader2 className="w-12 h-12 animate-spin" />
               <p className="text-lg">Chargement des détails...</p>
@@ -146,7 +115,7 @@ export default function MediaDetailPage() {
 
   if (!user) {
      return (
-        <main className="container mx-auto px-4 py-8">
+        <main className="flex-1 p-8">
            <div className="mb-6">
              <Button asChild variant="outline">
                 <Link href="/library">
@@ -168,7 +137,7 @@ export default function MediaDetailPage() {
 
   if (error || !item) {
     return (
-        <main className="container mx-auto px-4 py-8">
+        <main className="flex-1 p-8">
            <div className="mb-6">
              <Button asChild variant="outline">
                 <Link href="/library">
@@ -188,7 +157,7 @@ export default function MediaDetailPage() {
   const { Icon: StatusIcon, label: statusLabel, color: statusColor } = statusInfo[item.status];
 
   return (
-      <main className="container mx-auto px-4 py-8">
+      <main className="flex-1 p-4 sm:p-6 md:p-8">
         <div className="mb-6">
           <Button asChild variant="outline">
             <Link href="/library">
