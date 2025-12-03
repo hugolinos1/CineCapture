@@ -189,9 +189,7 @@ export default function MediaDetailPage() {
                       <h1 className="text-4xl font-bold font-headline text-primary-foreground">{item.title}</h1>
                     </div>
                      <div className="flex items-center gap-4">
-                        <div className="h-8">
-                          <PlatformLogo platform={item.platform} />
-                        </div>
+                        <PlatformLogo platform={item.platform} className="h-6" />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="icon">

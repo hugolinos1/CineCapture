@@ -22,7 +22,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, deleteDoc } from 'firebase/firestore';
-import PlatformLogo from './platform-logo';
 
 
 interface MovieCardProps {
@@ -95,11 +94,6 @@ export default function MovieCard({ item }: MovieCardProps) {
               className="object-cover w-full h-full"
               data-ai-hint="movie poster"
             />
-            {item.platform && (
-              <div className="absolute top-2 left-2 z-10 bg-black/60 p-1 rounded-md h-5">
-                 <PlatformLogo platform={item.platform} />
-              </div>
-            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-4">
               <h3 className="font-bold text-base text-white drop-shadow-md truncate">{item.title}</h3>

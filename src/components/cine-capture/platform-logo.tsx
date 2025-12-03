@@ -1,22 +1,23 @@
 'use client';
 
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { AppleTVPlusLogo, CanalPlusLogo, DisneyPlusLogo, NetflixLogo, PrimeVideoLogo } from './platform-icons';
 
 interface PlatformLogoProps {
   platform?: string;
+  className?: string;
 }
 
-const platformAssets: Record<string, { component: React.ElementType, name: string, needsInvert: boolean }> = {
-  'netflix': { component: NetflixLogo, name: 'Netflix', needsInvert: false },
-  'amazon prime video': { component: PrimeVideoLogo, name: 'Prime Video', needsInvert: false },
-  'prime video': { component: PrimeVideoLogo, name: 'Prime Video', needsInvert: false },
-  'disney plus': { component: DisneyPlusLogo, name: 'Disney+', needsInvert: false },
-  'apple tv plus': { component: AppleTVPlusLogo, name: 'Apple TV+', needsInvert: true },
-  'canal+': { component: CanalPlusLogo, name: 'Canal+', needsInvert: true },
+const platformAssets: Record<string, { src: string; name: string; }> = {
+  'netflix': { src: '/logos/netflix.svg', name: 'Netflix' },
+  'amazon prime video': { src: '/logos/prime-video.svg', name: 'Prime Video' },
+  'prime video': { src: '/logos/prime-video.svg', name: 'Prime Video' },
+  'disney plus': { src: '/logos/disney-plus.svg', name: 'Disney+' },
+  'apple tv plus': { src: '/logos/apple-tv-plus-white.svg', name: 'Apple TV+' },
+  'canal+': { src: '/logos/canal-plus-white.svg', name: 'Canal+' },
 };
 
-export default function PlatformLogo({ platform }: PlatformLogoProps) {
+export default function PlatformLogo({ platform, className }: PlatformLogoProps) {
   if (!platform) return null;
 
   const assetKey = Object.keys(platformAssets).find(key => platform.toLowerCase().includes(key));
@@ -29,11 +30,16 @@ export default function PlatformLogo({ platform }: PlatformLogoProps) {
     );
   }
 
-  const { component: LogoComponent, name, needsInvert } = platformAssets[assetKey];
+  const { src, name } = platformAssets[assetKey];
   
   return (
-    <div className="flex items-center justify-center h-full" title={name}>
-      <LogoComponent className={cn("h-4 w-auto", needsInvert && "fill-white")} />
+    <div className={cn("relative h-full w-auto", className)} title={name}>
+      <Image
+        src={src}
+        alt={`${name} logo`}
+        fill
+        className="object-contain"
+      />
     </div>
   );
 }
