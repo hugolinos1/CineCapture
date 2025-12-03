@@ -10,8 +10,6 @@ export {
   useAuth,
 } from './provider';
 export { useUser } from './auth/use-user';
-export { useCollection } from './firestore/use-collection';
-export { useDoc } from './firestore/use-doc';
 
 
 let firebaseApp: FirebaseApp;

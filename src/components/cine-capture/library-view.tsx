@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
@@ -22,8 +22,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, useFirestore, useUser } from '@/firebase';
-import { collection, writeBatch, getDocs, query, orderBy } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, writeBatch, getDocs, query, orderBy, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 
 export default function LibraryView() {
   const { user, loading: userLoading } = useUser();
@@ -31,18 +31,53 @@ export default function LibraryView() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const [items, setItems] = useState<MediaItem[]>([]);
+  const [itemsLoading, setItemsLoading] = useState(true);
+
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
 
-  const libraryQuery = useMemo(() => {
-    if (!user || !firestore) return null;
-    return query(
+  useEffect(() => {
+    if (!user || !firestore) {
+      setItems([]);
+      // If user is null but loading is finished, they are logged out.
+      if (!userLoading) {
+        setItemsLoading(false);
+      }
+      return;
+    }
+
+    setItemsLoading(true);
+    const libraryQuery = query(
       collection(firestore, 'users', user.uid, 'library'),
       orderBy('addedAt', 'desc')
     );
-  }, [user, firestore]);
 
-  const { data: items, loading: itemsLoading } = useCollection<MediaItem>(libraryQuery);
+    const unsubscribe: Unsubscribe = onSnapshot(
+      libraryQuery,
+      (snapshot) => {
+        const result: MediaItem[] = [];
+        snapshot.forEach((doc) => {
+          result.push({ id: doc.id, ...doc.data() } as MediaItem);
+        });
+        setItems(result);
+        setItemsLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching collection:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Impossible de charger la bibliothèque.',
+        });
+        setItemsLoading(false);
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [user, firestore, userLoading, toast]);
+
 
   const filteredItems = useMemo(() => {
     if (!items) return [];
@@ -81,7 +116,7 @@ export default function LibraryView() {
     }
   };
 
-  const isLoading = userLoading || (user && itemsLoading);
+  const isLoading = userLoading || itemsLoading;
 
   if (isLoading) {
       return (

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -30,8 +30,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useDoc, useFirestore, useUser } from '@/firebase';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { doc, updateDoc, deleteDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 
 const statusInfo: Record<MediaStatus, { Icon: React.ElementType; label: string; color: string; }> = {
   watched: { Icon: CheckCircle, label: 'Vu', color: 'text-green-400' },
@@ -53,15 +53,46 @@ export default function MediaDetailPage() {
   const firestore = useFirestore();
   const id = params.id as string;
 
-  const docRef = useMemo(() => {
-    if (!user || !id || !firestore) return null;
-    return doc(firestore, 'users', user.uid, 'library', id);
-  }, [user, id, firestore]);
-  
-  const { data: item, loading: itemLoading, error } = useDoc<MediaItem>(docRef);
+  const [item, setItem] = useState<MediaItem | null>(null);
+  const [itemLoading, setItemLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!user || !id || !firestore) {
+      if (!userLoading) {
+        setItemLoading(false);
+      }
+      return;
+    }
+
+    setItemLoading(true);
+    const docRef = doc(firestore, 'users', user.uid, 'library', id);
+
+    const unsubscribe: Unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setItem({ id: docSnap.id, ...docSnap.data() } as MediaItem);
+          setError(null);
+        } else {
+          setItem(null);
+          setError(new Error("L'élément demandé n'a pas été trouvé dans votre bibliothèque."));
+        }
+        setItemLoading(false);
+      },
+      (err) => {
+        console.error(`Error fetching document ${docRef.path}:`, err);
+        setError(err);
+        setItem(null);
+        setItemLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user, id, firestore, userLoading]);
+
 
   const updateStatus = async (newStatus: MediaStatus) => {
-    if (!item || !user || !docRef) return;
+    if (!item || !user || !firestore) return;
+    const docRef = doc(firestore, 'users', user.uid, 'library', id);
     
     try {
       await updateDoc(docRef, { status: newStatus });
@@ -80,7 +111,8 @@ export default function MediaDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!item || !user || !docRef) return;
+    if (!item || !user || !firestore) return;
+    const docRef = doc(firestore, 'users', user.uid, 'library', id);
     try {
        await deleteDoc(docRef);
 
@@ -99,7 +131,7 @@ export default function MediaDetailPage() {
     }
   };
   
-  const isLoading = userLoading || (user && itemLoading);
+  const isLoading = userLoading || itemLoading;
 
   if (isLoading) {
     return (
