@@ -5,7 +5,6 @@ import { extractMovieDetailsFromScreenshot } from '@/ai/flows/extract-movie-deta
 import { enrichExtractedMovieDetails } from '@/ai/flows/enrich-extracted-movie-details';
 import type { EnrichedMovieDetails } from '@/lib/types';
 
-
 async function fileToDataUri(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
@@ -49,7 +48,7 @@ export async function processTextSearch(
   formData: FormData,
 ): Promise<{ data: EnrichedMovieDetails | null; error: string | null; success: boolean }> {
   const title = formData.get('title') as string | null;
-  const type = formData.get('type') as 'movie' | 'series' | null;
+  const type = formData.get('type') as 'movie' | 'series' | 'miniseries' | null;
 
   if (!title || !type) {
     return { data: null, error: 'Le titre et le type sont requis.', success: false };
