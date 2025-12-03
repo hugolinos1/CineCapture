@@ -28,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFirestore, useUser, useDoc } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc, deleteDoc, Unsubscribe } from 'firebase/firestore';
 import PlatformLogo from '@/components/cine-capture/platform-logo';
 import { useMemo } from 'react';
