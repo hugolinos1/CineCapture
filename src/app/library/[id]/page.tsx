@@ -32,7 +32,7 @@ import { useFirestore, useUser, useDoc } from '@/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import PlatformLogo from '@/components/cine-capture/platform-logo';
 import { useRouter, useParams } from 'next/navigation';
-import { refreshMediaItem } from '@/lib/actions';
+import { fetchRefreshedMediaItem } from '@/lib/actions';
 
 
 const statusInfo: Record<MediaStatus, { Icon: React.ElementType; label: string; color: string; }> = {
@@ -103,30 +103,47 @@ export default function MediaDetailPage() {
   };
 
   const handleRefresh = async () => {
-    if (!item || !user || !docRef) return;
-
+    if (!item || !user || !docRef || !firestore) return;
+  
     setIsRefreshing(true);
     toast({
       title: 'Rafraîchissement en cours...',
       description: `Mise à jour des informations pour "${item.title}".`,
     });
-
-    const result = await refreshMediaItem({
-      docPath: docRef.path,
+  
+    const result = await fetchRefreshedMediaItem({
       title: item.title,
       type: item.type,
     });
-
-    if (result.success) {
-      toast({
-        title: 'Fiche mise à jour !',
-        description: `Les informations pour "${item.title}" ont été rafraîchies.`,
-      });
+  
+    if (result.success && result.data) {
+      try {
+        await updateDoc(docRef, {
+            summary: result.data.summary,
+            posterUrl: result.data.posterUrl,
+            cast: result.data.cast,
+            rating: result.data.rating,
+            genres: result.data.genres,
+            platform: result.data.platform,
+            source: result.data.source,
+        });
+        toast({
+          title: 'Fiche mise à jour !',
+          description: `Les informations pour "${item.title}" ont été rafraîchies.`,
+        });
+      } catch (e) {
+        console.error("Erreur lors de la mise à jour de la base de données:", e);
+        toast({
+          variant: 'destructive',
+          title: 'Échec de la mise à jour',
+          description: 'Impossible d\'enregistrer les nouvelles informations.',
+        });
+      }
     } else {
       toast({
         variant: 'destructive',
         title: 'Échec du rafraîchissement',
-        description: result.error,
+        description: result.error || 'Une erreur inconnue est survenue.',
       });
     }
     setIsRefreshing(false);

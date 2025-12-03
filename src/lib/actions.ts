@@ -4,8 +4,6 @@
 import { extractMovieDetailsFromScreenshot } from '@/ai/flows/extract-movie-details-from-screenshot';
 import { enrichExtractedMovieDetails } from '@/ai/flows/enrich-extracted-movie-details';
 import type { EnrichedMovieDetails } from '@/lib/types';
-import { initializeFirebase } from '@/firebase/server-actions';
-import { doc, updateDoc } from 'firebase/firestore';
 
 
 async function fileToDataUri(file: File): Promise<string> {
@@ -76,14 +74,13 @@ export async function processTextSearch(
 }
 
 interface RefreshMediaItemInput {
-    docPath: string;
     title: string;
     type: 'movie' | 'series' | 'miniseries';
 }
 
-export async function refreshMediaItem(
+export async function fetchRefreshedMediaItem(
   input: RefreshMediaItemInput,
-): Promise<{ success: boolean; error: string | null }> {
+): Promise<{ data: EnrichedMovieDetails | null; success: boolean; error: string | null }> {
   try {
     const enrichedDetails = await enrichExtractedMovieDetails({
       title: input.title,
@@ -93,26 +90,11 @@ export async function refreshMediaItem(
     if (!enrichedDetails) {
       throw new Error('Aucune information trouvée lors du rafraîchissement.');
     }
-
-    const { firestore } = initializeFirebase();
-    const docRef = doc(firestore, input.docPath);
     
-    // We only update the fields that are meant to be enriched.
-    // We don't want to overwrite user-set data like `status`.
-    await updateDoc(docRef, {
-        summary: enrichedDetails.summary,
-        posterUrl: enrichedDetails.posterUrl,
-        cast: enrichedDetails.cast,
-        rating: enrichedDetails.rating,
-        genres: enrichedDetails.genres,
-        platform: enrichedDetails.platform,
-        source: enrichedDetails.source,
-    });
-
-    return { success: true, error: null };
+    return { data: enrichedDetails, success: true, error: null };
   } catch (error) {
     console.error('Erreur lors du rafraîchissement de la fiche:', error);
     const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue.';
-    return { success: false, error: errorMessage };
+    return { data: null, success: false, error: errorMessage };
   }
 }
