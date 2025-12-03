@@ -12,7 +12,7 @@ import { Label } from '../ui/label';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, useSidebar } from '../ui/sidebar';
 import { Button } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 
@@ -170,54 +170,22 @@ export default function LibraryView() {
 }
 
 function LibraryViewContent() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
-  const { toast } = useToast();
   const { isMobile } = useSidebar();
-
-  const [items, setItems] = useState<MediaItem[]>([]);
-  const [itemsLoading, setItemsLoading] = useState(true);
-
+  
   const { statusFilter, typeFilter, genreFilter, platformFilter } = useLibraryFilters();
 
-  useEffect(() => {
-    if (!user || !firestore) {
-      if (!userLoading) {
-        setItems([]);
-        setItemsLoading(false);
-      }
-      return;
-    }
-  
-    setItemsLoading(true);
-  
-    const libraryQuery = query(
-      collection(firestore, 'users', user.uid, 'contents')
-    );
-  
-    const unsubscribe: Unsubscribe = onSnapshot(
-      libraryQuery,
-      (snapshot) => {
-        const result: MediaItem[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MediaItem));
-        setItems(result);
-        setItemsLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching collection:", error);
-        toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: 'Impossible de charger la bibliothèque.',
-        });
-        setItemsLoading(false);
-      }
-    );
-  
-    return () => unsubscribe();
-  }, [user, firestore, toast, userLoading]);
+  const libraryQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, 'users', user.uid, 'contents'));
+  }, [user, firestore]);
+
+  const { data: items, isLoading: itemsLoading, error } = useCollection<MediaItem>(libraryQuery);
 
   const allGenres = useMemo(() => {
+    if (!items) return [];
     const genres = new Set<string>();
     items.forEach(item => {
       item.genres?.forEach(genre => genres.add(genre));
@@ -226,6 +194,7 @@ function LibraryViewContent() {
   }, [items]);
 
   const allPlatforms = useMemo(() => {
+    if (!items) return [];
     const platforms = new Set<string>();
     items.forEach(item => {
         if(item.platform) {
@@ -237,6 +206,7 @@ function LibraryViewContent() {
 
 
   const filteredItems = useMemo(() => {
+    if (!items) return [];
     const statusMatch = (item: MediaItem) => statusFilter === 'all' || item.status === statusFilter;
     const typeMatch = (item: MediaItem) => typeFilter === 'all' || item.type === typeFilter;
     const platformMatch = (item: MediaItem) => platformFilter === 'all' || item.platform === platformFilter;
@@ -261,7 +231,7 @@ function LibraryViewContent() {
       });
   }, [items, statusFilter, typeFilter, genreFilter, platformFilter]);
 
-  const isLoading = userLoading || itemsLoading;
+  const isLoading = isUserLoading || itemsLoading;
 
   if (isLoading) {
       return (

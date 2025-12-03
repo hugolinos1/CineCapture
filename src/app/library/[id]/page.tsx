@@ -28,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFirestore, useUser, useDoc, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useFirestore, useUser, useDoc, errorEmitter, FirestorePermissionError, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import PlatformLogo from '@/components/cine-capture/platform-logo';
 import { useRouter, useParams } from 'next/navigation';
@@ -56,8 +56,8 @@ export default function MediaDetailPage() {
   const firestore = useFirestore();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const docRef = useMemo(() => {
-    if (!user || !id) return null;
+  const docRef = useMemoFirebase(() => {
+    if (!user || !id || !firestore) return null;
     return doc(firestore, 'users', user.uid, 'contents', id as string);
   }, [user, id, firestore]);
 
@@ -68,12 +68,6 @@ export default function MediaDetailPage() {
     
     const updatedData = { status: newStatus };
     updateDoc(docRef, updatedData)
-      .then(() => {
-        toast({
-          title: 'Statut mis à jour',
-          description: `Le statut de "${item.title}" est maintenant "${statusInfo[newStatus].label}".`,
-        });
-      })
       .catch((e) => {
         console.error("Erreur lors de la mise à jour du statut:", e);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -81,11 +75,6 @@ export default function MediaDetailPage() {
             operation: 'update',
             requestResourceData: updatedData
         }));
-        toast({
-          variant: "destructive",
-          title: 'Erreur',
-          description: "Une erreur s'est produite lors de la mise à jour."
-        });
       });
   };
 
@@ -105,11 +94,6 @@ export default function MediaDetailPage() {
             path: docRef.path,
             operation: 'delete'
         }));
-        toast({
-            variant: "destructive",
-            title: 'Erreur',
-            description: "Une erreur s'est produite lors de la suppression."
-        });
       });
   };
 
@@ -152,11 +136,6 @@ export default function MediaDetailPage() {
               operation: 'update',
               requestResourceData: updatedData
           }));
-          toast({
-            variant: 'destructive',
-            title: 'Échec de la mise à jour',
-            description: 'Impossible d\'enregistrer les nouvelles informations.',
-          });
         });
     } else {
       toast({
@@ -350,5 +329,3 @@ export default function MediaDetailPage() {
       </main>
   );
 }
-
-    
