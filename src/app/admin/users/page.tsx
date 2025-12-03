@@ -19,12 +19,14 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
+
 
 interface UserProfile {
   id: string;
   username: string;
   email: string;
-  registrationDate: string;
+  registrationDate: string | Timestamp;
   profileImageUrl?: string;
   isAdmin: boolean;
 }
@@ -37,6 +39,13 @@ function AdminDashboard() {
   }, [firestore]);
 
   const { data: users, isLoading: usersLoading, error: usersError } = useCollection<UserProfile>(usersQuery);
+
+  const getJsDate = (date: string | Timestamp | undefined): Date | null => {
+    if (!date) return null;
+    if (typeof date === 'string') return new Date(date);
+    if (date instanceof Timestamp) return date.toDate();
+    return null;
+  };
 
   if (usersLoading) {
     return (
@@ -69,7 +78,9 @@ function AdminDashboard() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users && users.map((user) => (
+            {users && users.map((user) => {
+              const registrationDate = getJsDate(user.registrationDate);
+              return (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-3">
@@ -82,7 +93,7 @@ function AdminDashboard() {
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  {user.registrationDate ? format(new Date(user.registrationDate), "d MMMM yyyy", { locale: fr }) : 'N/A'}
+                  {registrationDate ? format(registrationDate, "d MMMM yyyy", { locale: fr }) : 'N/A'}
                 </TableCell>
                 <TableCell>
                   {user.isAdmin ? (
@@ -92,7 +103,7 @@ function AdminDashboard() {
                   )}
                 </TableCell>
               </TableRow>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </CardContent>
