@@ -26,6 +26,7 @@ export default function UploadDialog() {
   const [state, formAction, isPending] = useActionState(processScreenshot, initialState);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [isResultOpen, setIsResultOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
@@ -75,7 +76,6 @@ export default function UploadDialog() {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0] || null;
     if (file && fileInputRef.current) {
-        // Create a new FileList object to assign to the input
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
         fileInputRef.current.files = dataTransfer.files;
