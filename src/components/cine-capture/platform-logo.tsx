@@ -19,15 +19,15 @@ const platformAssets: Record<string, { component: React.ElementType, name: strin
 };
 
 export default function PlatformLogo({ platform, className }: PlatformLogoProps) {
-  const [isDark, setIsDark] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   // This effect runs only on the client, after the component has mounted.
-  // This avoids hydration mismatch errors by not checking the theme on the server.
+  // This helps avoid hydration mismatch errors.
   useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
+    setIsClient(true);
   }, []);
 
-  if (!platform) return null;
+  if (!platform || !isClient) return null;
 
   // Find the correct platform asset, ignoring case.
   const assetKey = Object.keys(platformAssets).find(key => platform.toLowerCase().includes(key));
@@ -43,17 +43,18 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
 
   const { component: LogoComponent, name } = platformAssets[assetKey];
   
-  // Logos that are just black text (like Canal+ and Apple TV+) need to be filled with white in dark mode.
-  // Other logos (like Netflix) have their own colors and should not be changed.
+  // Logos that use `currentColor` for their fill will adapt to the text color.
+  // In dark mode, text is white, so the logo will be white.
   const needsColorInversion = ['canal+', 'apple tv plus'].includes(assetKey);
+  const isDark = document.documentElement.classList.contains('dark');
 
   return (
     <div className={className} title={name}>
       <LogoComponent 
-        className="h-full w-auto"
-        // In dark mode, if the logo needs inversion, set its fill color to white.
-        // Otherwise, let the SVG's internal colors take over.
-        style={isDark && needsColorInversion ? { color: 'white' } : {}}
+        className={cn(
+            "h-full w-auto",
+            isDark && needsColorInversion ? "text-white" : "text-black"
+        )}
       />
     </div>
   );
