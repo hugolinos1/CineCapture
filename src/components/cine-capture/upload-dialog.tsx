@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -13,7 +12,7 @@ import type { MediaItem } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 
 
@@ -85,51 +84,57 @@ export default function UploadDialog() {
       return;
     };
     
-    // Close dialog and navigate immediately for a better UX
     reset();
     router.push('/library');
 
-    try {
-      const libraryRef = collection(firestore, 'users', user.uid, 'contents');
+    const libraryRef = collection(firestore, 'users', user.uid, 'contents');
       
-      const q = query(libraryRef, where('title', '==', state.data.title.trim()));
-      const querySnapshot = await getDocs(q);
+    const q = query(libraryRef, where('title', '==', state.data.title.trim()));
+    const querySnapshot = await getDocs(q);
 
-      if (!querySnapshot.empty) {
-        toast({
-          variant: 'destructive',
-          title: 'Élément déjà existant',
-          description: `"${state.data.title}" est déjà dans votre bibliothèque.`,
-        });
-        return; 
-      }
-
-      const newItem = {
-        ...state.data,
-        userId: user.uid,
-        status: 'unwatched', 
-        genres: state.data.genres || [],
-        posterUrl: state.data.posterUrl || '',
-        summary: state.data.summary || '',
-        cast: state.data.cast || [],
-        addedAt: serverTimestamp(),
-      };
-      
-      await addDoc(libraryRef, newItem);
-      
-      toast({
-        title: 'Ajouté à la bibliothèque !',
-        description: `${newItem.title} a été ajouté à votre bibliothèque personnelle.`,
-      });
-      
-    } catch (error) {
-      console.error("Failed to add to library:", error);
+    if (!querySnapshot.empty) {
       toast({
         variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible d\'ajouter l\'élément à la bibliothèque.',
+        title: 'Élément déjà existant',
+        description: `"${state.data.title}" est déjà dans votre bibliothèque.`,
       });
+      return; 
     }
+
+    const newItem = {
+      ...state.data,
+      userId: user.uid,
+      status: 'unwatched', 
+      genres: state.data.genres || [],
+      posterUrl: state.data.posterUrl || '',
+      summary: state.data.summary || '',
+      cast: state.data.cast || [],
+      addedAt: serverTimestamp(),
+    };
+    
+    addDoc(libraryRef, newItem)
+      .then(() => {
+        toast({
+          title: 'Ajouté à la bibliothèque !',
+          description: `${newItem.title} a été ajouté à votre bibliothèque personnelle.`,
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to add to library:", error);
+        
+        const permissionError = new FirestorePermissionError({
+          path: libraryRef.path,
+          operation: 'create',
+          requestResourceData: newItem,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Impossible d\'ajouter l\'élément à la bibliothèque. Vérifiez les permissions.',
+        });
+      });
   };
 
   const reset = () => {
@@ -281,5 +286,3 @@ export default function UploadDialog() {
     </>
   );
 }
-
-    
