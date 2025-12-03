@@ -5,25 +5,14 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { Film, Trash2, PlusCircle, LogIn, Loader2, Filter } from 'lucide-react';
+import { Film, PlusCircle, LogIn, Loader2, Filter } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, useSidebar } from '../ui/sidebar';
 import { Button } from '../ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, writeBatch, getDocs, query, orderBy, onSnapshot, type Unsubscribe } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 
 function Filters() {
@@ -131,7 +120,11 @@ function LibraryViewContent() {
   useEffect(() => {
     if (!user || !firestore) {
       setItems([]);
-      setItemsLoading(!userLoading);
+      // We are not loading if there's no user or firestore, so set to false.
+      // The UI will show the login prompt.
+      if (!userLoading) {
+        setItemsLoading(false);
+      }
       return;
     }
   
@@ -171,34 +164,6 @@ function LibraryViewContent() {
       return statusMatch && typeMatch;
     });
   }, [items, statusFilter, typeFilter]);
-
-  const handleClearLibrary = async () => {
-    if (!user || !firestore) return;
-    try {
-      const libraryRef = collection(firestore, 'users', user.uid, 'contents');
-      const q = query(libraryRef);
-      const querySnapshot = await getDocs(q);
-      
-      const batch = writeBatch(firestore);
-      querySnapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-      
-      await batch.commit();
-
-      toast({
-        title: 'Bibliothèque vidée',
-        description: 'Tous les éléments ont été supprimés de votre bibliothèque.',
-      });
-    } catch (error) {
-       toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible de vider la bibliothèque.',
-      });
-       console.error("Error clearing library: ", error);
-    }
-  };
 
   const isLoading = userLoading || itemsLoading;
 
@@ -269,7 +234,7 @@ function LibraryViewContent() {
              </div>
           </div>
           {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
               {filteredItems.map(item => (
                 <MovieCard key={item.id} item={item} />
               ))}
