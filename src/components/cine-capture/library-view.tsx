@@ -8,7 +8,7 @@ import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
 import { Film, Trash2, PlusCircle, LogIn, Loader2, Filter } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarProvider, useSidebar } from '../ui/sidebar';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, useSidebar } from '../ui/sidebar';
 import { Button } from '../ui/button';
 import {
   AlertDialog,
@@ -24,6 +24,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, writeBatch, getDocs, query, orderBy, onSnapshot, type Unsubscribe } from 'firebase/firestore';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 
 function Filters() {
   const { typeFilter, setTypeFilter, statusFilter, setStatusFilter } = useLibraryFilters();
@@ -120,7 +121,7 @@ function LibraryViewContent() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
-  const { isMobile, toggleSidebar } = useSidebar();
+  const { isMobile } = useSidebar();
 
   const [items, setItems] = useState<MediaItem[]>([]);
   const [itemsLoading, setItemsLoading] = useState(true);
@@ -244,10 +245,20 @@ function LibraryViewContent() {
           <div className="flex items-center justify-between mb-6">
              <div className='flex items-center gap-4'>
                 {isMobile && (
-                    <Button variant="outline" size="icon" onClick={toggleSidebar}>
-                        <Filter className="h-4 w-4" />
-                        <span className="sr-only">Filtres</span>
-                    </Button>
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button variant="outline" size="icon">
+                            <Filter className="h-4 w-4" />
+                            <span className="sr-only">Ouvrir les filtres</span>
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="left" className='w-[300px]'>
+                         <SheetHeader className='mb-4'>
+                            <SheetTitle>Filtres</SheetTitle>
+                         </SheetHeader>
+                         <Filters />
+                      </SheetContent>
+                    </Sheet>
                 )}
                 <h1 className="text-2xl md:text-3xl font-bold font-headline">Ma Bibliothèque</h1>
              </div>
@@ -268,8 +279,8 @@ function LibraryViewContent() {
                           <AlertDialogTitle>Êtes-vous absolument sûr(e) ?</AlertDialogTitle>
                           <AlertDialogDescription>
                             Cette action est irréversible. Cela supprimera définitivement tous les éléments de votre bibliothèque.
-                          </dlalogDescription>
-                        </dlalogHeader>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Annuler</AlertDialogCancel>
                           <AlertDialogAction onClick={handleClearLibrary}>Oui, tout supprimer</AlertDialogAction>
