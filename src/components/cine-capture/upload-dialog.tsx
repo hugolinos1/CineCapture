@@ -12,9 +12,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import PlatformLogo from './platform-logo';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 
 const initialState = {
@@ -133,13 +134,6 @@ export default function UploadDialog() {
       .catch((error) => {
         console.error("Failed to add to library:", error);
         
-        const permissionError = new FirestorePermissionError({
-          path: libraryRef.path,
-          operation: 'create',
-          requestResourceData: newItem,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-
         toast({
           variant: 'destructive',
           title: 'Erreur',
@@ -302,5 +296,3 @@ export default function UploadDialog() {
     </>
   );
 }
-
-    

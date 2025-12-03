@@ -15,9 +15,10 @@ import { useRouter } from 'next/navigation';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import PlatformLogo from './platform-logo';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 
 const initialState = {
@@ -78,7 +79,7 @@ export default function SearchForm() {
     const newItem = {
       ...state.data,
       userId: user.uid,
-      status: 'unwatched', 
+      status: 'unwatched',
       genres: state.data.genres || [],
       posterUrl: state.data.posterUrl || '',
       summary: state.data.summary || '',
@@ -96,14 +97,6 @@ export default function SearchForm() {
       })
       .catch((error) => {
         console.error("Failed to add to library:", error);
-
-        const permissionError = new FirestorePermissionError({
-          path: libraryRef.path,
-          operation: 'create',
-          requestResourceData: newItem,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-
         toast({
           variant: 'destructive',
           title: 'Erreur',
@@ -242,5 +235,3 @@ export default function SearchForm() {
     </>
   );
 }
-
-    
