@@ -10,8 +10,8 @@ export const PLATFORM_LOGOS: Record<string, LogoInfo> = {
     invertOnDark: false,
   },
   'prime video': {
-    url: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Prime_Video.png',
-    invertOnDark: false,
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Amazon_Prime_Video_logo.svg/1200px-Amazon_Prime_Video_logo.svg.png',
+    invertOnDark: true,
   },
   'disney plus': {
     url: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg',
