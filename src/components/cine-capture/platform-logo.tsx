@@ -8,13 +8,13 @@ interface PlatformLogoProps {
   className?: string;
 }
 
-const platformAssets: Record<string, { component: React.ElementType, name: string }> = {
-  'netflix': { component: NetflixLogo, name: 'Netflix' },
-  'amazon prime video': { component: PrimeVideoLogo, name: 'Prime Video' },
-  'prime video': { component: PrimeVideoLogo, name: 'Prime Video' },
-  'disney plus': { component: DisneyPlusLogo, name: 'Disney+' },
-  'apple tv plus': { component: AppleTVPlusLogo, name: 'Apple TV+' },
-  'canal+': { component: CanalPlusLogo, name: 'Canal+' },
+const platformAssets: Record<string, { component: React.ElementType, name: string, needsInvert: boolean }> = {
+  'netflix': { component: NetflixLogo, name: 'Netflix', needsInvert: false },
+  'amazon prime video': { component: PrimeVideoLogo, name: 'Prime Video', needsInvert: false },
+  'prime video': { component: PrimeVideoLogo, name: 'Prime Video', needsInvert: false },
+  'disney plus': { component: DisneyPlusLogo, name: 'Disney+', needsInvert: false },
+  'apple tv plus': { component: AppleTVPlusLogo, name: 'Apple TV+', needsInvert: true },
+  'canal+': { component: CanalPlusLogo, name: 'Canal+', needsInvert: true },
 };
 
 export default function PlatformLogo({ platform, className }: PlatformLogoProps) {
@@ -30,11 +30,11 @@ export default function PlatformLogo({ platform, className }: PlatformLogoProps)
     );
   }
 
-  const { component: LogoComponent, name } = platformAssets[assetKey];
+  const { component: LogoComponent, name, needsInvert } = platformAssets[assetKey];
   
   return (
     <div className={cn("flex items-center justify-center h-full", className)} title={name}>
-      <LogoComponent className="h-full w-auto" />
+      <LogoComponent className={cn("h-full w-auto", needsInvert && "fill-white")} />
     </div>
   );
 }

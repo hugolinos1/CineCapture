@@ -59,7 +59,6 @@ export const AppleTVPlusLogo = (props: React.SVGProps<SVGSVGElement>) => (
     viewBox="0 0 24 24"
     aria-hidden="true"
     role="img"
-    fill="#FFFFFF"
     {...props}
   >
     <path
@@ -74,7 +73,6 @@ export const CanalPlusLogo = (props: React.SVGProps<SVGSVGElement>) => (
     viewBox="0 0 100 25"
     aria-hidden="true"
     role="img"
-    fill="#FFFFFF"
     {...props}
   >
     <path
