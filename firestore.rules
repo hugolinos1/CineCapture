@@ -8,7 +8,7 @@
  *
  * Key Security Decisions:
  * - User data is private by default. Access is restricted to the document owner or an administrator.
- * - The top-level `/users` collection cannot be listed to prevent user enumeration.
+ * - The top-level `/users` collection can be listed ONLY by administrators. This prevents user enumeration by regular users.
  * - An administrator role is granted by the existence of a document in the `/roles_admin/{userId}` collection. Admins have read-only access to all user data and write access to global collections.
  * - The `/genres` collection is public for reading but writable only by administrators.
  * - The `/content_genres` join collection is locked down because its schema lacks a `userId` field, making it impossible to securely determine ownership of the relationship. This must be fixed in the data model.
@@ -62,7 +62,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if false; // Prevents user enumeration
+      allow list: if isAdmin(); // ONLY admins can list users.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isOwner(userId) && resource != null && request.resource.data.id == resource.data.id;
       allow delete: if isOwner(userId) && resource != null;

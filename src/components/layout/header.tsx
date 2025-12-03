@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Clapperboard, Film, Search, User, LogOut, Filter, ChevronDown, UserPlus, LogIn as LogInIcon } from 'lucide-react';
+import { Clapperboard, Film, Search, User, LogOut, Filter, ChevronDown, UserPlus, LogIn as LogInIcon, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -155,6 +155,12 @@ export default function Header() {
                     </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    {user.email === 'hugues.rabier@gmail.com' && (
+                       <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                          <Shield className="mr-2 h-4 w-4" />
+                          <span>Administration</span>
+                       </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={handleChangeAccount}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Changer de compte</span>
