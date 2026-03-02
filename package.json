@@ -1,6 +1,7 @@
+
 {
-  "name": "nextn",
-  "version": "0.1.0",
+  "name": "cine-capture-final-recovery-v118",
+  "version": "118.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
@@ -44,10 +45,8 @@
     "firebase": "^10.12.2",
     "genkit": "^1.20.0",
     "lucide-react": "^0.475.0",
-    "next": "15.3.3",
-    "patch-package": "^8.0.0",
+    "next": "15.1.2",
     "react": "^18.3.1",
-    "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
     "recharts": "^2.15.1",

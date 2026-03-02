@@ -1,8 +1,8 @@
 
 import type {NextConfig} from 'next';
 
+// Force filesystem sync - v118 - F5 required after applying changes
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -43,12 +43,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'fr.web.img4.acsta.net',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'www.themoviedb.org',
         port: '',
         pathname: '/**',
@@ -62,6 +56,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'www.impawards.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fr.web.img4.acsta.net',
         port: '',
         pathname: '/**',
       },
