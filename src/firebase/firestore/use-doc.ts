@@ -36,7 +36,7 @@ export function useDoc<T extends DocumentData>(
       docRef,
       (docSnap) => {
         if (docSnap.exists()) {
-          setData({ id: docSnap.id, ...docSnap.data() } as T);
+          setData({ id: docSnap.id, ...docSnap.data() } as unknown as T);
         } else {
           // Document does not exist
           setData(null);

@@ -1,20 +1,22 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import MovieCard from './movie-card';
 import type { MediaItem, MediaStatus, MediaType } from '@/lib/types';
-import { Film, PlusCircle, LogIn, Loader2, Filter } from 'lucide-react';
+import { Film, PlusCircle, LogIn, Loader2, Filter, X } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, useSidebar } from '../ui/sidebar';
 import { Button } from '../ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, onSnapshot, type Unsubscribe } from 'firebase/firestore';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
+import { useUser, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '../ui/sheet';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Badge } from '../ui/badge';
+import { ScrollArea } from '../ui/scroll-area';
 
 function Filters({ allGenres, allPlatforms }: { allGenres: string[], allPlatforms: string[] }) {
   const { 
@@ -30,88 +32,134 @@ function Filters({ allGenres, allPlatforms }: { allGenres: string[], allPlatform
     );
   };
 
+  const resetFilters = () => {
+    setTypeFilter('all');
+    setStatusFilter('all');
+    setGenreFilter([]);
+    setPlatformFilter('all');
+  };
+
+  const activeFiltersCount = 
+    (typeFilter !== 'all' ? 1 : 0) + 
+    (statusFilter !== 'all' ? 1 : 0) + 
+    (platformFilter !== 'all' ? 1 : 0) + 
+    genreFilter.length;
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Type</h4>
-        <RadioGroup value={typeFilter} onValueChange={(value) => setTypeFilter(value as MediaType | 'all')} className="ml-1">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="all" id="type-all" />
-            <Label htmlFor="type-all">Tous</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="movie" id="type-movie" />
-            <Label htmlFor="type-movie">Films</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="series" id="type-series" />
-            <Label htmlFor="type-series">Séries</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="miniseries" id="type-miniseries" />
-            <Label htmlFor="type-miniseries">Mini-séries</Label>
-          </div>
-        </RadioGroup>
-      </div>
-      <div>
-        <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Statut</h4>
-        <RadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as MediaStatus | 'all')} className="ml-1">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="all" id="status-all" />
-            <Label htmlFor="status-all">Tous</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="watched" id="status-watched" />
-            <Label htmlFor="status-watched">Vus</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="in-progress" id="status-in-progress" />
-            <Label htmlFor="status-in-progress">En cours</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="unwatched" id="status-unwatched" />
-            <Label htmlFor="status-unwatched">Non vus</Label>
-          </div>
-        </RadioGroup>
-      </div>
-       {allPlatforms.length > 0 && (
-        <div>
-          <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Plateforme</h4>
-          <RadioGroup value={platformFilter} onValueChange={(value) => setPlatformFilter(value)} className="ml-1">
-             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="all" id="platform-all" />
-              <Label htmlFor="platform-all">Toutes</Label>
-            </div>
-            {allPlatforms.map(platform => (
-              <div key={platform} className="flex items-center space-x-2">
-                <RadioGroupItem value={platform} id={`platform-${platform}`} />
-                <Label htmlFor={`platform-${platform}`} className="font-normal capitalize">{platform}</Label>
-              </div>
-            ))}
-          </RadioGroup>
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">Filtres actifs</span>
+          {activeFiltersCount > 0 && (
+            <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs">
+              {activeFiltersCount}
+            </Badge>
+          )}
         </div>
-      )}
-      {allGenres.length > 0 && (
-        <div>
-          <h4 className="font-medium text-sm mb-2 text-sidebar-foreground">Genres</h4>
-          <div className="space-y-2 ml-1">
-            {allGenres.map(genre => (
-              <div key={genre} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`genre-${genre}`}
-                  checked={genreFilter.includes(genre)}
-                  onCheckedChange={(checked) => handleGenreChange(genre, !!checked)}
-                />
-                <Label htmlFor={`genre-${genre}`} className="font-normal capitalize">{genre}</Label>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        {activeFiltersCount > 0 && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={resetFilters}
+            className="h-8 px-2 text-xs text-muted-foreground hover:text-primary"
+          >
+            Réinitialiser
+          </Button>
+        )}
+      </div>
+
+      <Accordion type="multiple" defaultValue={['type', 'status']} className="w-full">
+        <AccordionItem value="type" className="border-none">
+          <AccordionTrigger className="py-2 hover:no-underline">
+            <span className="text-sm font-medium">Type</span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <RadioGroup value={typeFilter} onValueChange={(value) => setTypeFilter(value as MediaType | 'all')} className="grid grid-cols-2 gap-2 pt-1">
+              {[
+                { id: 'type-all', value: 'all', label: 'Tous' },
+                { id: 'type-movie', value: 'movie', label: 'Films' },
+                { id: 'type-series', value: 'series', label: 'Séries' },
+                { id: 'type-miniseries', value: 'miniseries', label: 'Mini-séries' }
+              ].map((opt) => (
+                <div key={opt.id} className="flex items-center space-x-2 bg-muted/30 p-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer">
+                  <RadioGroupItem value={opt.value} id={opt.id} />
+                  <Label htmlFor={opt.id} className="text-xs cursor-pointer flex-1">{opt.label}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="status" className="border-none">
+          <AccordionTrigger className="py-2 hover:no-underline">
+            <span className="text-sm font-medium">Statut</span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <RadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as MediaStatus | 'all')} className="grid grid-cols-2 gap-2 pt-1">
+              {[
+                { id: 'status-all', value: 'all', label: 'Tous' },
+                { id: 'status-watched', value: 'watched', label: 'Vus' },
+                { id: 'status-in-progress', value: 'in-progress', label: 'En cours' },
+                { id: 'status-unwatched', value: 'unwatched', label: 'Non vus' }
+              ].map((opt) => (
+                <div key={opt.id} className="flex items-center space-x-2 bg-muted/30 p-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer">
+                  <RadioGroupItem value={opt.value} id={opt.id} />
+                  <Label htmlFor={opt.id} className="text-xs cursor-pointer flex-1">{opt.label}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </AccordionContent>
+        </AccordionItem>
+
+        {allPlatforms.length > 0 && (
+          <AccordionItem value="platforms" className="border-none">
+            <AccordionTrigger className="py-2 hover:no-underline">
+              <span className="text-sm font-medium">Plateforme</span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <RadioGroup value={platformFilter} onValueChange={(value) => setPlatformFilter(value)} className="grid grid-cols-2 gap-2 pt-1">
+                <div className="flex items-center space-x-2 bg-muted/30 p-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer">
+                  <RadioGroupItem value="all" id="platform-all" />
+                  <Label htmlFor="platform-all" className="text-xs cursor-pointer flex-1">Toutes</Label>
+                </div>
+                {allPlatforms.map(platform => (
+                  <div key={platform} className="flex items-center space-x-2 bg-muted/30 p-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer">
+                    <RadioGroupItem value={platform} id={`platform-${platform}`} />
+                    <Label htmlFor={`platform-${platform}`} className="text-xs cursor-pointer flex-1 capitalize truncate">{platform}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {allGenres.length > 0 && (
+          <AccordionItem value="genres" className="border-none">
+            <AccordionTrigger className="py-2 hover:no-underline">
+              <span className="text-sm font-medium">Genres</span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ScrollArea className="h-[200px] pr-4 pt-1">
+                <div className="grid grid-cols-1 gap-1">
+                  {allGenres.map(genre => (
+                    <div key={genre} className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-muted/30 transition-colors cursor-pointer">
+                      <Checkbox
+                        id={`genre-${genre}`}
+                        checked={genreFilter.includes(genre)}
+                        onCheckedChange={(checked) => handleGenreChange(genre, !!checked)}
+                      />
+                      <Label htmlFor={`genre-${genre}`} className="text-xs cursor-pointer flex-1 capitalize">{genre}</Label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+      </Accordion>
     </div>
   );
 }
-
 
 type LibraryFiltersContextType = {
   statusFilter: MediaStatus | 'all';
@@ -134,13 +182,11 @@ const useLibraryFilters = () => {
   return context;
 };
 
-
 function LibraryFiltersProvider({ children }: { children: React.ReactNode }) {
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<MediaType | 'all'>('all');
   const [genreFilter, setGenreFilter] = useState<string[]>([]);
   const [platformFilter, setPlatformFilter] = useState<string>('all');
-
 
   const value = {
     statusFilter,
@@ -159,7 +205,6 @@ function LibraryFiltersProvider({ children }: { children: React.ReactNode }) {
     </LibraryFiltersContext.Provider>
   );
 }
-
 
 export default function LibraryView() {
   return (
@@ -182,7 +227,7 @@ function LibraryViewContent() {
     return query(collection(firestore, 'users', user.uid, 'contents'));
   }, [user, firestore]);
 
-  const { data: items, isLoading: itemsLoading, error } = useCollection<MediaItem>(libraryQuery);
+  const { data: items, loading: itemsLoading } = useCollection<MediaItem>(libraryQuery);
 
   const allGenres = useMemo(() => {
     if (!items) return [];
@@ -204,7 +249,6 @@ function LibraryViewContent() {
     return Array.from(platforms).sort();
   }, [items]);
 
-
   const filteredItems = useMemo(() => {
     if (!items) return [];
     const statusMatch = (item: MediaItem) => statusFilter === 'all' || item.status === statusFilter;
@@ -224,12 +268,17 @@ function LibraryViewContent() {
         if (ratingA !== ratingB) {
           return ratingB - ratingA;
         }
-        // Fallback to date added if ratings are the same or one is missing
         const dateA = a.addedAt ? (a.addedAt as any).toDate() : new Date(0);
         const dateB = b.addedAt ? (b.addedAt as any).toDate() : new Date(0);
         return dateB.getTime() - dateA.getTime();
       });
   }, [items, statusFilter, typeFilter, genreFilter, platformFilter]);
+
+  const activeFiltersCount = 
+    (typeFilter !== 'all' ? 1 : 0) + 
+    (statusFilter !== 'all' ? 1 : 0) + 
+    (platformFilter !== 'all' ? 1 : 0) + 
+    genreFilter.length;
 
   const isLoading = isUserLoading || itemsLoading;
 
@@ -264,8 +313,8 @@ function LibraryViewContent() {
       <Sidebar collapsible="icon">
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Filtres</SidebarGroupLabel>
-            <div className="px-2">
+            <SidebarGroupLabel className="mb-2">Filtres</SidebarGroupLabel>
+            <div className="px-3">
                <Filters allGenres={allGenres} allPlatforms={allPlatforms}/>
             </div>
           </SidebarGroup>
@@ -277,14 +326,24 @@ function LibraryViewContent() {
                 {isMobile && (
                     <Sheet>
                       <SheetTrigger asChild>
-                        <Button variant="outline" size="icon">
-                            <Filter className="h-4 w-4" />
-                            <span className="sr-only">Ouvrir les filtres</span>
+                        <Button variant="outline" size="sm" className="relative">
+                            <Filter className="h-4 w-4 mr-2" />
+                            Filtres
+                            {activeFiltersCount > 0 && (
+                              <Badge variant="default" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                                {activeFiltersCount}
+                              </Badge>
+                            )}
                         </Button>
                       </SheetTrigger>
-                      <SheetContent side="left" className='w-[300px]'>
-                        <SheetHeader className='mb-4'>
+                      <SheetContent side="bottom" className='h-[80vh] rounded-t-xl px-6'>
+                        <SheetHeader className='flex flex-row items-center justify-between mb-4 space-y-0'>
                             <SheetTitle>Filtres</SheetTitle>
+                            <SheetClose asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </SheetClose>
                         </SheetHeader>
                         <Filters allGenres={allGenres} allPlatforms={allPlatforms} />
                       </SheetContent>

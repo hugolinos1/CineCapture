@@ -38,7 +38,7 @@ function AdminDashboard() {
     return collection(firestore, 'users');
   }, [firestore]);
 
-  const { data: users, isLoading: usersLoading, error: usersError } = useCollection<UserProfile>(usersQuery);
+  const { data: users, loading: usersLoading, error: usersError } = useCollection<UserProfile>(usersQuery);
 
   const getJsDate = (date: string | Timestamp | undefined): Date | null => {
     if (!date) return null;
@@ -122,7 +122,7 @@ export default function AdminUsersPage() {
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data: userProfile, isLoading: profileLoading } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>(userDocRef);
 
   const isLoading = isUserLoading || profileLoading;
   const isAuthorized = userProfile && userProfile.isAdmin;

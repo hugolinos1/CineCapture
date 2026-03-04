@@ -61,7 +61,7 @@ export default function MediaDetailPage() {
     return doc(firestore, 'users', user.uid, 'contents', id as string);
   }, [user, id, firestore]);
 
-  const { data: item, isLoading: itemLoading, error } = useDoc<MediaItem>(docRef);
+  const { data: item, loading: itemLoading, error } = useDoc<MediaItem>(docRef);
 
   const updateStatus = async (newStatus: MediaStatus) => {
     if (!item || !user || !firestore || !docRef) return;

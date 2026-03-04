@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -73,7 +74,8 @@ async function verifyImageUrl(url: string): Promise<boolean> {
     if (!url) return false;
     try {
         const response = await fetch(url, { method: 'HEAD' });
-        return response.ok && response.headers.get('content-type')?.startsWith('image/');
+        const contentType = response.headers.get('content-type');
+        return response.ok && !!contentType && contentType.startsWith('image/');
     } catch {
         return false;
     }

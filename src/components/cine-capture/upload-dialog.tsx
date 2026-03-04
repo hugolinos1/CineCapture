@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import PlatformLogo from './platform-logo';
+import type { MediaType } from '@/lib/types';
 
 
 const initialState = {
@@ -32,7 +33,7 @@ export default function UploadDialog() {
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
   const router = useRouter();
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
 
 
@@ -157,7 +158,7 @@ export default function UploadDialog() {
 
 
   const result = state.data;
-  const typeLabels = {
+  const typeLabels: Record<MediaType, string> = {
     movie: 'Film',
     series: 'Série',
     miniseries: 'Mini-série',
@@ -242,7 +243,7 @@ export default function UploadDialog() {
                   <div className="flex justify-between items-start">
                     <Badge variant="outline" className="mb-2 capitalize flex items-center w-fit">
                       <Tv className="mr-2 h-4 w-4" />
-                      {typeLabels[result.type] || 'Contenu'}
+                      {typeLabels[result.type as MediaType] || 'Contenu'}
                     </Badge>
                     <div className="h-6 flex items-center">
                         <PlatformLogo platform={result.platform} className="h-5 w-auto" />
@@ -260,7 +261,7 @@ export default function UploadDialog() {
                     )}
                     {result.genres && result.genres.length > 0 && (
                       <div className="hidden md:flex items-center gap-2 flex-wrap">
-                          {result.genres.slice(0, 2).map(genre => <Badge key={genre} variant="secondary">{genre}</Badge>)}
+                          {result.genres.slice(0, 2).map((genre: string) => <Badge key={genre} variant="secondary">{genre}</Badge>)}
                       </div>
                     )}
                   </div>
@@ -294,5 +295,3 @@ export default function UploadDialog() {
     </>
   );
 }
-
-    
